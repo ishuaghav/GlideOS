@@ -1753,7 +1753,11 @@ async function speakBriefing(){
     briefingAudio=new Audio(url); briefingAudio.play();
     btn.textContent='▶ Playing…';
     briefingAudio.onended=()=>{ btn.textContent='Quick voice brief'; btn.disabled=false; if(status) status.textContent='Done.'; };
-  }catch(e){ btn.textContent='Quick voice brief'; btn.disabled=false; if(status) status.textContent=e.message; }
+  }catch(e){
+    btn.textContent='Quick voice brief'; btn.disabled=false;
+    if(status) status.textContent=e.message;
+    if(/key|server|proxy|unreachable/i.test(e.message)) openSettings();
+  }
 }
 
 async function getVoiceBlob(text, statusEl){
@@ -1786,7 +1790,7 @@ async function getVoiceBlob(text, statusEl){
         if(!browserKey) throw new Error(msg || 'Add ElevenLabs key in Keys, or set ELEVENLABS_API_KEY on the server.');
       }
     }catch(e){
-      if(!browserKey) throw e;
+      if(!browserKey) throw new Error('Voice server is not reachable. Start the local demo server, or add an ElevenLabs key in Keys and try again.');
       if(statusEl) statusEl.textContent = 'Proxy unavailable, using browser key directly…';
     }
   }
@@ -1794,7 +1798,7 @@ async function getVoiceBlob(text, statusEl){
   let key = browserKey;
   if(!key){
     openSettings();
-    throw new Error('Add ElevenLabs key in Keys, then try voice again.');
+    throw new Error('Add an ElevenLabs key in Keys, then try voice again.');
   }
   const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`,{
     method:'POST',
