@@ -1,0 +1,3048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>The Orchestrator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --f0:#060f09;--f1:#0a1a0e;--f2:#0e2218;--f3:#163322;--f4:#1e4030;
+  --b1:#1a3828;--b2:#224838;
+  --cream:#f0e8d0;--cm:#c4b898;--cd:#8a7e68;--cg:#4a4438;
+  --gold:#b8925a;--gl:#d4ad7a;
+  --amber:#c8a84a;--al:#d7bd68;--todol:#c8a84a;
+  --sage:#5a8a6a;--sl:#7aaa8a;
+  --rose:#9a5848;--rl:#c07868;
+  --sky:#4a7a8a;--skl:#6a9aaa;
+  --vio:#6a5a9a;--vil:#9a8acc;
+  --pred:#0d1e2a;--predl:#5a9aaa;--predB:#1a3040;
+  --GL:linear-gradient(90deg,transparent,#b8925a44,transparent);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{min-height:100%;background:var(--f0);color:var(--cream);font-family:'Jost',sans-serif;font-weight:300;font-size:16px;overscroll-behavior:none}
+
+/* VIEWS */
+.view{display:none;flex-direction:column;min-height:100vh}
+.view.active{display:flex}
+
+/* LOGIN */
+.login-view{background:var(--f0);padding:28px 20px;align-items:center;justify-content:center}
+.login-shell{width:100%;max-width:980px}
+.login-kicker{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:300;color:var(--cream);line-height:1}
+.login-sub{font-size:16px;color:var(--cm);line-height:1.55;margin-top:10px;max-width:640px}
+.login-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:26px}
+.login-card{background:var(--f1);border:1px solid var(--b1);border-radius:6px;padding:16px;text-align:left;color:var(--cm);font-family:'Jost',sans-serif;cursor:pointer;transition:transform .16s,border-color .16s,background .16s;min-height:178px}
+.login-card:hover{transform:translateY(-2px);border-color:var(--gold);background:var(--f2)}
+.login-card.primary{border-color:var(--gold);background:linear-gradient(135deg,var(--f2),var(--f1))}
+.login-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--cream);line-height:1.05;margin-bottom:6px}
+.login-role{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.login-copy{font-size:14px;line-height:1.45;color:var(--cm);margin-bottom:14px}
+.login-cta{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cream)}
+
+/* TOPBAR */
+.topbar{background:var(--f1);border-bottom:1px solid var(--b1);padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;flex-shrink:0}
+.tb-logo{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;letter-spacing:.3em;color:var(--cream);flex:1}
+.tb-logo span{color:var(--gold)}
+.staff-top{font-size:12px;color:var(--cream);letter-spacing:.04em;white-space:nowrap}
+.tb-back{background:none;border:none;color:var(--cd);font-size:22px;cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center}
+.tb-back:active{color:var(--cream)}
+.tb-btn{background:var(--gold);color:var(--f0);border:none;font-family:'Jost',sans-serif;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:7px 13px;border-radius:2px;cursor:pointer;white-space:nowrap}
+.tb-btn:active{background:var(--gl)}
+.tb-btn.outline{background:transparent;color:var(--cm);border:1px solid var(--b1)}
+.tb-btn.outline:active{border-color:var(--gold);color:var(--gl)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);animation:pulse 2.5s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+
+/* ── HOME TWO-COLUMN ── */
+.home-body{flex:1;display:grid;grid-template-columns:250px 1fr;overflow:hidden;min-height:0}
+.home-left{background:var(--f1);border-right:1px solid var(--b1);overflow-y:auto;display:flex;flex-direction:column}
+.home-left-inner{padding:10px}
+.home-left-time{padding:14px 12px 10px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.home-left-clock{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--cream);line-height:1;letter-spacing:.02em}
+.home-left-date{font-size:9px;color:var(--cd);letter-spacing:.1em;margin-top:3px}
+.home-right{display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.home-rf-strip{padding:9px 12px;border-bottom:1px solid var(--b1);display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;background:var(--f1)}
+.home-feed{flex:1;overflow-y:auto;padding:12px}
+.staff-card{padding:13px 12px;border-top:1px solid var(--b1);background:var(--f0)}
+.staff-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.staff-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--cream);line-height:1.05}
+.staff-role{font-size:13px;color:var(--cm);margin-top:3px}
+.staff-meta{font-size:12px;color:var(--cd);line-height:1.45;margin-top:7px}
+.role-guidance{margin:12px 16px 0;border:1px solid var(--b1);background:var(--f1);border-radius:4px;padding:11px 12px;color:var(--cm)}
+.role-guidance-title{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.role-guidance-copy{font-size:14px;line-height:1.45;color:var(--cm)}
+.agenda-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--b1)}
+.agenda-check{width:18px;height:18px;border-radius:3px;border:1px solid var(--gold);background:transparent;flex-shrink:0;margin-top:2px;cursor:pointer}
+.agenda-check.done{background:var(--sage);border-color:var(--sage);color:var(--f0);font-size:11px;display:flex;align-items:center;justify-content:center}
+.agenda-text{font-size:13px;color:var(--cm);line-height:1.45}
+.agenda-meta{font-size:11px;color:var(--cd);margin-top:3px}
+.cue-status-card{background:var(--f2);border:1px solid var(--b1);border-radius:3px;padding:9px 11px;margin-bottom:7px}
+.cue-status-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.cue-status-meta{font-size:11px;color:var(--cd);line-height:1.35}
+.cue-status-text{font-size:13px;color:var(--cm);line-height:1.45}
+.cue-pill{font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--b1);border-radius:2px;padding:3px 7px;white-space:nowrap;color:var(--cd)}
+.cue-pill.pending{color:var(--al);border-color:var(--amber)55;background:var(--amber)12}
+.cue-pill.in_review{color:var(--predl);border-color:var(--predl)55;background:var(--predl)12}
+.cue-pill.applied{color:var(--sl);border-color:var(--sage)55;background:var(--sage)12}
+.cue-pill.dismissed{color:var(--rl);border-color:var(--rose)55;background:var(--rose)12}
+
+/* UPCOMING STRIP */
+.section-lbl{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--cd);margin-bottom:10px}
+.upcoming-card{background:var(--f2);border:1px solid var(--b1);border-radius:4px;padding:13px;margin-bottom:8px;cursor:pointer;transition:background .15s}
+.upcoming-card:active{background:var(--f3)}
+.uc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.uc-guest{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;color:var(--cream)}
+.uc-time{font-size:10px;color:var(--predl);letter-spacing:.08em}
+.uc-src{font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.uc-txt{font-size:11px;color:var(--cm);line-height:1.45}
+.uc-action{font-size:10px;color:#c8a84a;margin-top:5px;line-height:1.4}
+.uc-property{font-size:9px;color:var(--cd);margin-top:4px}
+
+/* ── SHIFT VIEW ── */
+.shift-scroll{flex:1;overflow-y:auto}
+.brief-panel{display:none;background:var(--f0);border-bottom:1px solid var(--b1);padding:14px 16px 12px}
+.brief-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.brief-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.brief-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--cream);line-height:1.1}
+.brief-close{background:transparent;border:0;color:var(--cd);font-size:22px;line-height:1;cursor:pointer;min-height:0;padding:0 2px}
+.brief-content{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;color:var(--cm)}
+.brief-card{background:transparent;border:1px solid var(--b1);border-radius:3px;padding:10px 11px}
+.brief-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+.brief-name{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--cream);line-height:1.15}
+.brief-tier{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.brief-purpose{font-size:13px;color:var(--cm);line-height:1.4;margin-bottom:6px}
+.brief-line{font-size:13px;color:var(--cm);line-height:1.45;margin-top:4px}
+.brief-line strong{color:var(--predl);font-weight:400}
+.brief-line.action strong{color:var(--gold)}
+.brief-line.avoid{color:var(--rl)}
+.brief-actions{display:flex;align-items:center;gap:8px;margin-top:10px}
+.brief-actions .ld{display:none;align-items:center;gap:6px;font-size:10px;color:var(--cd)}
+.brief-status{font-size:12px;color:var(--cd);line-height:1.4}
+.settings-copy{font-size:13px;color:var(--cm);line-height:1.5;margin:0 0 13px}
+.settings-row{margin-bottom:10px}
+.settings-row label{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cd);margin-bottom:6px}
+.settings-input{width:100%;background:var(--f2);border:1px solid var(--b1);border-radius:3px;color:var(--cream);font-family:'Jost',sans-serif;font-size:15px;padding:11px 12px;outline:none}
+.settings-input:focus{border-color:var(--gold)}
+.settings-help{font-size:12px;color:var(--cd);line-height:1.45;margin-top:5px}
+
+/* COUNTDOWN BANNER */
+.countdown-banner{background:linear-gradient(135deg,var(--predB),var(--pred));border-bottom:1px solid var(--predl)33;padding:14px 16px;flex-shrink:0}
+.cb-label{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--predl);margin-bottom:5px}
+.cb-guest{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:3px}
+.cb-txt{font-size:11px;color:var(--cm);line-height:1.45;margin-bottom:7px}
+.cb-action{font-size:11px;color:#c8a84a;line-height:1.4;margin-bottom:10px;padding-left:2px}
+.cb-bottom{display:flex;align-items:center;gap:10px}
+.cb-timer{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--predl);line-height:1;flex-shrink:0}
+.cb-timer.urgent{color:var(--rl);animation:urgentPulse 1s ease-in-out infinite}
+@keyframes urgentPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.cb-timer-label{font-size:9px;color:var(--cd);letter-spacing:.08em}
+.cb-speak-btn{margin-left:auto;background:var(--vio);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:9px 14px;border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.cb-speak-btn:active{background:var(--vil)}
+.cb-speak-btn:disabled{opacity:.5}
+.cb-auto-row{margin-top:8px;display:flex;align-items:center;gap:8px}
+.cb-auto-lbl{font-size:10px;color:var(--cd);flex:1}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--b1);border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle input:checked+.toggle-track{background:var(--sage)}
+.toggle-track::before{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.toggle input:checked+.toggle-track::before{transform:translateX(18px)}
+
+/* SHIFT TP LIST */
+.shift-section{padding:12px 16px 6px}
+.shift-section-lbl{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--cd);margin-bottom:9px}
+.stp-card{background:var(--f2);border:1px solid var(--b1);border-radius:4px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:all .15s}
+.stp-card:active{background:var(--f3)}
+.stp-card.next{border-color:var(--predl);background:var(--predB)}
+.stp-card.done{opacity:.45}
+.stp-head{padding:8px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.stp-card.next .stp-head{border-color:var(--predl)33;background:var(--pred)}
+.stp-guest{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:300;color:var(--cream)}
+.stp-time{font-size:9px;color:var(--predl)}
+.stp-body{padding:9px 12px}
+.stp-txt{font-size:11px;color:var(--cm);line-height:1.45}
+.stp-action{font-size:10px;color:#c8a84a;margin-top:5px;line-height:1.4}
+.stp-badges{display:flex;gap:5px;margin-top:6px}
+.stp-badge{font-size:8px;padding:2px 6px;border-radius:10px}
+.sb-pred{background:var(--predB);color:var(--predl);border:1px solid var(--predl)33}
+.sb-done{background:var(--sage)18;color:var(--sl);border:1px solid var(--sage)28}
+.sb-pm{background:var(--gold)15;color:var(--gl);border:1px solid var(--gold)30}
+.done-btn{background:transparent;border:1px solid var(--sage)44;color:var(--sl);font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:2px;cursor:pointer;margin-top:6px;transition:all .15s}
+.done-btn:active{background:var(--sage);color:var(--f0)}
+.done-btn.undo{border-color:var(--b2);color:var(--cd)}
+.done-btn.undo:active{background:var(--f3);color:var(--cream)}
+.edit-btn{background:transparent;border:1px solid var(--gold)55;color:var(--gl);font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:2px;cursor:pointer;margin-top:6px;transition:all .15s}
+.edit-btn:active{background:var(--gold);color:var(--f0)}
+
+/* WAVEFORM */
+.wf{display:flex;align-items:center;gap:2px;height:14px}
+.wb{width:3px;border-radius:2px;background:#fff;opacity:.7;animation:wav 1.1s ease-in-out infinite}
+.wb:nth-child(1){height:4px;animation-delay:0s}.wb:nth-child(2){height:8px;animation-delay:.1s}.wb:nth-child(3){height:12px;animation-delay:.2s}.wb:nth-child(4){height:14px;animation-delay:.05s}.wb:nth-child(5){height:9px;animation-delay:.3s}.wb:nth-child(6){height:5px;animation-delay:.4s}.wb:nth-child(7){height:11px;animation-delay:.15s}.wb:nth-child(8){height:13px;animation-delay:.25s}.wb:nth-child(9){height:7px;animation-delay:.35s}
+@keyframes wav{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.3)}}
+.wf.paused .wb{animation-play-state:paused;opacity:.25}
+
+/* GUEST LIST (compact home) */
+.guest-strip{background:var(--f2);border:1px solid var(--b1);border-radius:4px;padding:11px 13px;margin-bottom:7px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:12px}
+.guest-strip:active{background:var(--f3)}
+.guest-strip.guest-active{border-color:var(--sage)44;background:var(--f2)}
+.guest-strip.guest-focused{border-color:var(--gold);background:var(--f3)}
+.gs-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;color:var(--cream);flex:1}
+.gs-meta{font-size:10px;color:var(--cd)}
+.gs-next{font-size:9px;color:var(--predl)}
+.gs-arrow{color:var(--cd);font-size:18px}
+
+/* OVERLAY SHEET */
+.overlay{position:fixed;inset:0;background:#000000aa;z-index:100;display:none;align-items:flex-end}
+.overlay.show{display:flex}
+.sheet{background:var(--f1);border-top:1px solid var(--b2);border-radius:14px 14px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:16px 16px 36px;transform:translateY(100%);transition:transform .28s ease}
+.overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:0 auto 14px}
+
+/* TP DETAIL SHEET */
+.sh-src{font-size:9px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+.sh-time{font-size:11px;color:var(--cd);margin-bottom:9px}
+.sh-guest{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:9px}
+.sh-txt{font-size:13px;color:var(--cm);line-height:1.6;margin-bottom:9px}
+.sh-anec{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;color:var(--cream);line-height:1.7;font-style:italic;border-left:2px solid var(--vio);padding-left:10px;margin-bottom:11px}
+.sh-pred{font-size:12px;color:var(--predl);line-height:1.55;padding:9px 12px;background:var(--predB);border-radius:3px;border-left:2px solid var(--predl);margin-bottom:9px}
+.sh-action{font-size:12px;color:#c8a84a;line-height:1.55;padding:9px 12px;background:#2a1a08;border-radius:3px;border-left:2px solid #c8a84a;margin-bottom:9px}
+.sh-pm{font-size:12px;color:var(--gl);line-height:1.55;padding:9px 12px;background:var(--gold)0a;border-radius:3px;border-left:2px solid var(--gold)55;margin-bottom:9px;font-style:italic}
+.sh-train{background:var(--f3);border:1px solid var(--b1);border-radius:3px;padding:10px 12px;margin-bottom:12px}
+.sh-train-lbl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:5px}
+.sh-train-txt{font-size:11px;color:var(--cm);line-height:1.55}
+.sh-note-inp{background:var(--f2);border:1px solid var(--b1);border-radius:3px;padding:11px 12px;font-family:'Jost',sans-serif;font-size:13px;color:var(--cream);width:100%;resize:none;height:80px;outline:none;line-height:1.5;-webkit-appearance:none;margin-bottom:11px}
+.sh-note-inp:focus{border-color:var(--b2)}
+.sh-note-inp::placeholder{color:var(--cg)}
+.hc-edit-panel{display:none;border:1px solid var(--gold)33;background:var(--f1);border-radius:4px;padding:10px 11px;margin:10px 0 12px}
+.hc-edit-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:9px}
+.hc-edit-row{display:grid;grid-template-columns:95px 1fr;gap:8px;align-items:start;margin-bottom:8px}
+.hc-edit-row label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cd);padding-top:9px}
+.hc-edit-input,.hc-edit-textarea{background:var(--f2);border:1px solid var(--b1);border-radius:3px;color:var(--cream);font-family:'Jost',sans-serif;font-size:14px;line-height:1.45;padding:8px 10px;width:100%;outline:none}
+.hc-edit-textarea{min-height:72px;resize:vertical}
+.hc-edit-input:focus,.hc-edit-textarea:focus{border-color:var(--gold)}
+.sh-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--cd);margin-bottom:6px;display:block}
+.sh-btns{display:flex;gap:8px;margin-bottom:9px}
+.sh-btns button{flex:1;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:3px;border:none;cursor:pointer}
+.sh-save{background:var(--gold);color:var(--f0)}.sh-save:active{background:var(--gl)}
+.sh-close{background:transparent;color:var(--cd);border:1px solid var(--b1) !important}.sh-close:active{border-color:var(--gold) !important}
+.speak-full-btn{width:100%;background:var(--vio);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.speak-full-btn:active{background:var(--vil)}.speak-full-btn:disabled{opacity:.5}
+.speak-status{font-size:10px;color:var(--cd);text-align:center;margin-top:6px;min-height:16px}
+.wf-center{display:none;justify-content:center;margin-top:6px}
+.wf-center.show{display:flex}
+
+/* PING */
+.ping-btn{background:var(--vio);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;transition:background .15s;margin-top:7px}
+.ping-btn:active{background:var(--vil)}
+.ping-sheet-role{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--vil);margin-bottom:4px}
+.ping-sheet-ctx{font-size:12px;color:var(--cm);line-height:1.5;margin-bottom:13px;padding:9px 12px;background:var(--predB);border-radius:3px;border-left:2px solid var(--predl)}
+.ping-note-inp{background:var(--f2);border:1px solid var(--b1);border-radius:3px;padding:11px 12px;font-family:'Jost',sans-serif;font-size:13px;color:var(--cream);width:100%;resize:none;height:80px;outline:none;line-height:1.5;-webkit-appearance:none;margin-bottom:11px}
+.ping-note-inp:focus{border-color:var(--vio)}
+.ping-note-inp::placeholder{color:var(--cg)}
+.ping-queued{background:var(--f2);border:1px solid var(--sage)44;border-radius:3px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px}
+.pq-role{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--sl);margin-bottom:3px}
+.pq-txt{font-size:11px;color:var(--cm);line-height:1.45;flex:1}
+.pq-speak{background:var(--vio);color:#fff;border:none;font-size:9px;padding:5px 9px;border-radius:2px;cursor:pointer;font-family:'Jost',sans-serif;flex-shrink:0;letter-spacing:.06em}
+.pq-speak:active{background:var(--vil)}
+
+/* ORCHESTRATOR */
+.orch-fab{position:fixed;left:18px;right:18px;bottom:18px;max-width:420px;margin:0 auto;background:var(--gold);color:var(--f0);border:1px solid var(--gl);font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:15px 16px;border-radius:5px;cursor:pointer;box-shadow:0 12px 36px #00000066,0 0 0 1px #f1d47a33;z-index:60;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s,box-shadow .15s,background .15s}
+.orch-fab:hover{transform:translateY(-1px);box-shadow:0 16px 42px #00000080,0 0 0 1px #f1d47a55}
+.orch-fab:active{background:var(--gl);transform:translateY(0)}
+.orch-fab svg{width:16px;height:16px;flex-shrink:0}
+.orch-fab-main{display:block;line-height:1.05}
+.orch-fab-sub{display:block;font-size:10px;letter-spacing:.03em;text-transform:none;font-weight:500;opacity:.78;margin-top:3px}
+.home-role-tab{background:var(--f2);border:1px solid var(--b1);color:var(--cd);padding:7px 14px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.08em;cursor:pointer;border-radius:20px;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.home-role-tab:hover{border-color:var(--b2);color:var(--cm)}
+.home-role-tab:active{background:var(--f3)}
+.home-role-tab.active{background:var(--f4);border-color:var(--gold);color:var(--gl)}
+.orch-guest-chip{background:var(--f2);border:1px solid var(--b1);color:var(--cd);padding:6px 12px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.06em;cursor:pointer;border-radius:20px;transition:all .15s;white-space:nowrap}
+.orch-guest-chip:active{background:var(--f3)}
+.orch-guest-chip.selected{background:var(--f4);border-color:var(--gold);color:var(--gl)}
+.orch-guest-chip.all-chip{border-color:var(--b2);color:var(--cm)}
+.orch-overlay{position:fixed;inset:0;background:#000000aa;z-index:100;display:none;align-items:flex-end}
+.orch-overlay.show{display:flex}
+.orch-sheet{background:var(--f1);border-top:1px solid var(--b2);border-radius:14px 14px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:16px 16px 36px;transform:translateY(100%);transition:transform .28s ease}
+.orch-overlay.show .orch-sheet{transform:translateY(0)}
+.orch-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:3px}
+.orch-sub{font-size:11px;color:var(--cd);line-height:1.55;margin-bottom:13px}
+.orch-inp{background:var(--f2);border:1px solid var(--b1);border-radius:3px;padding:12px;font-family:'Jost',sans-serif;font-size:13px;color:var(--cream);width:100%;resize:none;height:90px;outline:none;line-height:1.5;-webkit-appearance:none;margin-bottom:11px}
+.orch-inp:focus{border-color:var(--gold)}
+.orch-inp::placeholder{color:var(--cg)}
+.orch-run{width:100%;background:var(--gold);color:var(--f0);border:none;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:14px;border-radius:3px;cursor:pointer;margin-bottom:4px}
+.orch-run:active{background:var(--gl)}.orch-run:disabled{opacity:.4}
+.ld-row{display:none;align-items:center;gap:8px;font-size:11px;color:var(--cd);justify-content:center;padding:12px}
+.ld-row.show{display:flex}
+.spin{width:12px;height:12px;border:2px solid var(--b2);border-top-color:var(--gold);border-radius:50%;animation:rot .7s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* DIFF */
+.diff-wrap{display:none;margin-top:13px}
+.diff-wrap.show{display:block}
+.diff-summary-card{background:var(--f3);border-left:3px solid var(--gold);border-radius:0 3px 3px 0;padding:10px 13px;margin-bottom:11px}
+.diff-summary-lbl{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.diff-summary-txt{font-size:12px;color:var(--cm);line-height:1.55}
+.diff-count-lbl{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--cd);margin-bottom:9px}
+.diff-card{background:var(--f2);border:1px solid var(--b1);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.diff-card-role{padding:7px 12px;background:var(--f1);border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.diff-role-name{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--cm);font-weight:400}
+.diff-scope{font-size:9px;color:var(--cd)}
+.diff-card-body{padding:11px 12px}
+.diff-row{display:flex;gap:4px;margin-bottom:3px;align-items:flex-start}
+.diff-indicator{width:16px;flex-shrink:0;font-size:15px;font-weight:300;line-height:1.4}
+.diff-minus{color:var(--rl)}
+.diff-plus{color:var(--sl)}
+.diff-old-text{font-size:11px;color:var(--rl);line-height:1.55;text-decoration:line-through;opacity:.75;padding:3px 8px;background:#3a100811;border-radius:2px;flex:1}
+.diff-new-text{font-size:11px;color:var(--sl);line-height:1.55;padding:3px 8px;background:#0a3a1811;border-radius:2px;flex:1}
+.diff-edit{background:#0a3a1811;border:1px solid var(--sage)44;border-radius:3px;color:var(--sl);font-family:'Jost',sans-serif;font-size:13px;line-height:1.5;padding:7px 9px;width:100%;min-height:74px;resize:vertical;outline:none}
+.diff-edit:focus{border-color:var(--sage);background:#0a3a1822}
+.diff-edit-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--sl);margin-bottom:4px}
+.diff-reason{font-size:10px;color:var(--cd);font-style:italic;margin-top:7px;padding-top:7px;border-top:1px solid var(--b1)}
+.diff-approve-row{display:flex;gap:8px;margin-top:13px;padding-bottom:env(safe-area-inset-bottom,16px)}
+.diff-approve-row button{flex:1;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:14px;border-radius:3px;border:none;cursor:pointer}
+.diff-approve{background:var(--sage);color:var(--f0)}.diff-approve:active{background:var(--sl)}
+.diff-reject{background:transparent;color:var(--cd);border:1px solid var(--b1) !important}.diff-reject:active{border-color:var(--gold) !important}
+
+/* INPUTS */
+.ng-overlay{position:fixed;inset:0;background:var(--f0);z-index:120;display:none;overflow-y:auto}
+.ng-overlay.show{display:block}
+.ng-inner{padding:16px;padding-bottom:40px;min-height:100%}
+.ng-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:14px}
+.ng-sec{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--cd);padding:10px 0 7px;border-bottom:1px solid var(--b1);margin-bottom:10px;margin-top:6px}
+.ng-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.ng-field{margin-bottom:9px}
+.ng-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--cd);margin-bottom:5px;display:block}
+.ng-inp,.ng-sel,.ng-ta{background:var(--f2);border:1px solid var(--b1);border-radius:3px;padding:11px 12px;font-family:'Jost',sans-serif;font-size:13px;color:var(--cream);width:100%;outline:none;-webkit-appearance:none;line-height:1.5}
+.ng-inp:focus,.ng-sel:focus,.ng-ta:focus{border-color:var(--b2)}
+.ng-inp::placeholder,.ng-ta::placeholder{color:var(--cg)}
+.ng-sel option{background:var(--f2)}
+.ng-ta{resize:none;height:70px}
+.ng-btns{display:flex;gap:9px;margin-top:14px}
+.ng-btns button{flex:1;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:14px;border-radius:3px;border:none;cursor:pointer}
+.ng-create{background:var(--gold);color:var(--f0)}.ng-create:active{background:var(--gl)}.ng-create:disabled{opacity:.4}
+.ng-cancel{background:transparent;color:var(--cd);border:1px solid var(--b1) !important}
+
+/* LEGIBILITY PASS */
+.tb-btn,.cb-speak-btn,.done-btn,.ping-btn,.orch-fab,.home-role-tab,.orch-guest-chip{font-size:11px}
+.section-lbl,.shift-section-lbl,.cb-label,.sh-train-lbl,.diff-summary-lbl,.diff-count-lbl,.ng-sec{font-size:10px}
+.home-left-date,.uc-src,.uc-property,.stp-time,.stp-badge,.sh-src,.sh-lbl,.ping-sheet-role,.pq-role,.diff-role-name,.diff-scope,.ng-lbl{font-size:10px}
+.uc-guest,.gs-name,.stp-guest{font-size:17px}
+.cb-guest,.sh-guest{font-size:20px}
+.uc-txt,.uc-action,.cb-txt,.cb-action,.stp-txt,.stp-action,.sh-train-txt,.pq-txt,.orch-sub,.diff-summary-txt,.diff-old-text,.diff-new-text,.diff-reason{font-size:13px;line-height:1.55}
+.sh-txt,.sh-pred,.sh-action,.sh-pm,.ping-sheet-ctx{font-size:14px;line-height:1.6}
+.sh-note-inp,.ping-note-inp,.orch-inp,.ng-inp,.ng-sel,.ng-ta{font-size:15px}
+.ng-btns button,.diff-approve-row button,.sh-btns button,.speak-full-btn,.orch-run{font-size:12px}
+div[style*="font-size:7px"]{font-size:10px !important}
+div[style*="font-size:8px"],span[style*="font-size:8px"]{font-size:10px !important}
+div[style*="font-size:9px"],span[style*="font-size:9px"],button[style*="font-size:9px"]{font-size:11px !important}
+div[style*="font-size:10px"],span[style*="font-size:10px"],button[style*="font-size:10px"]{font-size:12px !important}
+div[style*="font-size:11px"],span[style*="font-size:11px"],button[style*="font-size:11px"]{font-size:13px !important}
+div[style*="font-size:12px"],span[style*="font-size:12px"]{font-size:14px !important}
+div[style*="font-size:13px"],span[style*="font-size:13px"]{font-size:15px !important}
+button{min-height:34px}
+
+/* MINIMAL PASS */
+.topbar{height:50px;background:var(--f0)}
+.home-left,.home-rf-strip,.staff-card{background:var(--f0)}
+.home-left-inner,.home-feed{padding:10px}
+.guest-strip,.upcoming-card,.stp-card,.diff-card,.ping-queued{background:transparent;border-color:var(--b1);box-shadow:none}
+.guest-strip:hover,.upcoming-card:hover,.stp-card:hover{border-color:var(--b2)}
+.upcoming-card,.guest-strip,.stp-card{border-radius:3px}
+.countdown-banner{background:var(--f1);border-bottom:1px solid var(--b1);padding:12px 16px}
+.stp-card.next{background:var(--f1);border-color:var(--predl)}
+.home-role-tab,.orch-guest-chip{background:transparent;border-color:var(--b1);border-radius:3px}
+.home-role-tab.active,.orch-guest-chip.selected{background:var(--f2);border-color:var(--gold)}
+.orch-fab{border-radius:5px;background:var(--gold);box-shadow:0 12px 36px #00000066,0 0 0 1px #f1d47a33}
+.sheet,.orch-sheet{border-radius:8px 8px 0 0}
+
+/* PROMINENT TYPE PASS */
+.tb-logo{font-size:20px}
+.home-left-clock{font-size:38px}
+.section-lbl,.shift-section-lbl,.brief-kicker,.ng-sec{font-size:11px;letter-spacing:.18em}
+.uc-guest,.gs-name,.stp-guest{font-size:20px;font-weight:300}
+.uc-time,.uc-src,.uc-property,.stp-time,.gs-next{font-size:12px}
+.uc-txt,.uc-action,.stp-txt,.stp-action,.cb-txt,.cb-action,.brief-line,.brief-purpose{font-size:15px;line-height:1.55}
+.cb-guest,.sh-guest,.brief-title{font-size:24px}
+.brief-name{font-size:22px}
+.brief-tier{font-size:12px}
+.home-role-tab,.tb-btn,.orch-fab,.done-btn,.ping-btn,.orch-guest-chip{font-size:12px;font-weight:500}
+.cb-timer{font-size:34px}
+.orch-title,.ng-title{font-size:26px}
+.orch-sub,.diff-summary-txt,.diff-old-text,.diff-new-text,.diff-reason,.sh-txt,.sh-pred,.sh-action,.sh-pm,.ping-sheet-ctx{font-size:15px;line-height:1.6}
+.ng-inp,.ng-sel,.ng-ta,.orch-inp,.sh-note-inp,.ping-note-inp{font-size:16px}
+
+.fade{animation:fd .3s ease both}
+@keyframes fd{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ═══ HOME VIEW ═══ -->
+<div class="view active login-view" id="view-login">
+  <div class="login-shell">
+    <div class="login-kicker">Rosewood Sand Hill · Menlo Park</div>
+    <div class="login-title">Staff Login</div>
+    <div class="login-sub">Select your staff profile to continue. Everyone sees the same live guest memory; Maria can orchestrate hotel-wide changes, and every team can cue Maria when the plan should change.</div>
+    <div class="login-grid">
+      <button class="login-card primary" onclick="loginAs('maria')">
+        <div class="login-name">Maria</div>
+        <div class="login-role">Head Concierge</div>
+        <div class="login-copy">Full guest context, handoff brief, team cues, and hotel-wide orchestration.</div>
+        <div class="login-cta">Log in</div>
+      </button>
+      <button class="login-card" onclick="loginAs('maya')">
+        <div class="login-name">Maya</div>
+        <div class="login-role">Front Desk Concierge</div>
+        <div class="login-copy">Arrivals, guest-facing requests, local cards, and cues to Maria when plans need coordination.</div>
+        <div class="login-cta">Log in</div>
+      </button>
+      <button class="login-card" onclick="loginAs('sofia')">
+        <div class="login-name">Sofia</div>
+        <div class="login-role">Spa Concierge</div>
+        <div class="login-copy">Only spa touchpoints, guest comfort notes, read-aloud brief, and cues to Maria.</div>
+        <div class="login-cta">Log in</div>
+      </button>
+      <button class="login-card" onclick="loginAs('leo')">
+        <div class="login-name">Leo</div>
+        <div class="login-role">Valet Concierge</div>
+        <div class="login-copy">Arrivals, car timing, luggage cues, and quick escalation to the orchestrator.</div>
+        <div class="login-cta">Log in</div>
+      </button>
+      <button class="login-card" onclick="loginAs('nina')">
+        <div class="login-name">Nina</div>
+        <div class="login-role">Restaurant Concierge</div>
+        <div class="login-copy">Tables, bottle preferences, dietary memory, and dining-specific handoffs.</div>
+        <div class="login-cta">Log in</div>
+      </button>
+      <button class="login-card" onclick="loginAs('omar')">
+        <div class="login-name">Omar</div>
+        <div class="login-role">Housekeeping</div>
+        <div class="login-copy">Room-state memory, privacy cues, amenity timing, and quiet escalations to Maria.</div>
+        <div class="login-cta">Log in</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-home">
+  <div class="topbar">
+    <div class="tb-logo">The <span>O</span>rchestrator</div>
+    <div class="staff-top" id="home-staff-top"></div>
+    <div class="live-dot"></div>
+    <div style="font-size:9px;color:var(--cd);" id="home-clock-top"></div>
+    <button class="tb-btn outline" onclick="openNG()">+ Guest</button>
+    <button class="tb-btn outline" onclick="returnToShift()">Shift</button>
+    <button class="tb-btn outline" onclick="openSettings()">Keys</button>
+    <button class="tb-btn outline" onclick="signOut()">Sign out</button>
+  </div>
+  <div class="home-body">
+
+    <!-- LEFT: GUEST PANEL -->
+    <div class="home-left">
+      <div class="home-left-time">
+        <div class="home-left-clock" id="home-time">--:--</div>
+        <div class="home-left-date" id="home-date"></div>
+      </div>
+      <div class="home-left-inner" id="home-guest-list"></div>
+      <div class="staff-card">
+        <div class="staff-kicker">Signed in</div>
+        <div class="staff-name" id="staff-card-name">Maria</div>
+        <div class="staff-role" id="staff-card-role">Head Concierge</div>
+        <div class="staff-meta" id="staff-card-meta">Already on shift. Today’s guest memory, handoffs, and team cues are live.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TOUCHPOINT FEED -->
+    <div class="home-right">
+      <!-- ROLE FILTER -->
+      <div class="home-rf-strip">
+        <button class="home-role-tab role-filter-tab active" id="hrf-All" onclick="setHomeRF('All',this)">All</button>
+        <button class="home-role-tab role-filter-tab" id="hrf-Concierge" onclick="setHomeRF('Concierge',this)">Concierge</button>
+        <button class="home-role-tab role-filter-tab" id="hrf-Restaurant" onclick="setHomeRF('Restaurant',this)">Restaurant</button>
+        <button class="home-role-tab role-filter-tab" id="hrf-Spa" onclick="setHomeRF('Spa',this)">Spa</button>
+        <button class="home-role-tab role-filter-tab" id="hrf-Housekeeping" onclick="setHomeRF('Housekeeping',this)">Housekeeping</button>
+        <button class="home-role-tab role-filter-tab" id="hrf-Valet" onclick="setHomeRF('Valet',this)">Valet</button>
+      </div>
+      <!-- GUEST FILTER -->
+      <div class="home-rf-strip" id="guest-filter-strip" style="border-top:none;background:var(--f2);padding-top:7px;padding-bottom:7px;"></div>
+      <div style="padding:10px 12px 0;">
+        <div class="section-lbl" id="upcoming-lbl" style="margin-bottom:0;">Upcoming Touchpoints</div>
+      </div>
+      <div class="home-feed" id="upcoming-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SHIFT VIEW ═══ -->
+<div class="view" id="view-shift">
+  <div class="topbar">
+    <button class="tb-back" onclick="signOut()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="tb-logo" id="shift-role-label" style="font-size:14px;letter-spacing:.08em;"></div>
+    <div class="live-dot"></div>
+    <button class="tb-btn outline" id="guest-records-btn" onclick="openGuestRecords()" style="font-size:9px;display:none;">Guests</button>
+    <button class="tb-btn outline" onclick="signOut()" style="font-size:9px;">Switch</button>
+    <button class="tb-btn outline" id="speed-btn" onclick="bringUpToSpeed()" style="font-size:9px;">↑ Brief me</button>
+    <button class="tb-btn outline" onclick="openSettings()" style="font-size:9px;">Keys</button>
+    <button class="tb-btn" onclick="speakNext()" id="speak-next-btn">▶ Next</button>
+  </div>
+
+  <!-- BRING UP TO SPEED PANEL -->
+  <div id="speed-panel" class="brief-panel">
+    <div class="brief-head">
+      <div>
+        <div class="brief-kicker">Handoff Brief</div>
+        <div class="brief-title">What matters now</div>
+      </div>
+      <button class="brief-close" onclick="document.getElementById('speed-panel').style.display='none'">×</button>
+    </div>
+    <div id="speed-content" class="brief-content"></div>
+    <div class="brief-actions">
+      <button class="tb-btn" id="speed-speak-btn" onclick="speakBriefing()">Quick voice brief</button>
+      <div class="ld" id="speed-ld"><div class="spin"></div></div>
+      <div class="brief-status" id="speed-status"></div>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN BANNER -->
+  <div class="countdown-banner" id="countdown-banner">
+  </div>
+
+  <div class="shift-scroll" id="shift-scroll">
+
+    <!-- BRIEF ME CARD — prominent at shift start -->
+    <div id="brief-me-card" style="margin:12px 16px 0;background:linear-gradient(135deg,var(--f3),var(--f2));border:1px solid var(--b1);border-radius:4px;padding:13px;cursor:pointer;" onclick="bringUpToSpeed()">
+      <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;">New to this shift?</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:300;color:var(--cream);margin-bottom:4px;">Brief me on all active guests</div>
+      <div style="font-size:10px;color:var(--cd);">Tap to get a 60-second summary of who is in house, what has happened today, and what is coming next for your role.</div>
+      <div style="margin-top:9px;display:flex;gap:8px;">
+        <button onclick="event.stopPropagation();bringUpToSpeed()" style="background:var(--gold);color:var(--f0);border:none;font-family:'Jost',sans-serif;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;border-radius:2px;cursor:pointer;">Read Briefing</button>
+        <button onclick="event.stopPropagation();speakBriefing()" style="background:var(--vio);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;border-radius:2px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zm-1 13.93A7 7 0 0 1 5 8H3a9 9 0 0 0 8 8.94V20H8v2h8v-2h-3v-3.07A9 9 0 0 0 21 8h-2a7 7 0 0 1-7 6.93z"/></svg>
+          Hear it
+        </button>
+        <button onclick="event.stopPropagation();document.getElementById('brief-me-card').style.display='none'" style="background:transparent;border:none;color:var(--cd);font-family:'Jost',sans-serif;font-size:10px;cursor:pointer;margin-left:auto;">Dismiss</button>
+      </div>
+    </div>
+    <div class="role-guidance" id="role-guidance"></div>
+    <div id="cue-status-section" style="display:none;padding:12px 16px;border-bottom:1px solid var(--b1);background:var(--f1);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);">Cues sent to Maria</div>
+        <span id="cue-status-count" style="font-size:9px;color:var(--amber);"></span>
+      </div>
+      <div id="cue-status-list"></div>
+    </div>
+    <div id="orch-agenda-section" style="display:none;padding:12px 16px;border-bottom:1px solid var(--b1);background:var(--f1);">
+      <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:9px;">Your Agenda</div>
+      <div id="orch-agenda-list"></div>
+    </div>
+
+    <!-- PENDING SUGGESTIONS (concierge only) -->
+    <div id="suggestions-section" style="display:none;padding:12px 16px;border-bottom:1px solid var(--b1);background:var(--f1);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);">Team Cues for Maria</div>
+        <span id="suggestions-count" style="font-size:9px;color:var(--amber);"></span>
+      </div>
+      <div id="suggestions-list"></div>
+    </div>
+
+    <div class="shift-section">
+      <div class="shift-section-lbl" id="shift-now-lbl">Upcoming Today</div>
+      <div id="shift-tp-list"></div>
+    </div>
+    <div style="height:80px;"></div>
+  </div>
+
+</div>
+
+<!-- GLOBAL ORCHESTRATE FAB — always fixed, visibility controlled by JS -->
+<button class="orch-fab" id="orch-fab" onclick="openOrch()">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+  <span>
+    <span class="orch-fab-main">Orchestrate Change</span>
+    <span class="orch-fab-sub">Tell every team what changed</span>
+  </span>
+</button>
+
+<!-- ═══ GUEST DETAIL OVERLAY (from home) ═══ -->
+<div class="overlay" id="guest-ov" onclick="closeGuest(event)">
+  <div class="sheet" id="guest-sheet">
+    <div class="sheet-handle"></div>
+    <div id="guest-sheet-content"></div>
+  </div>
+</div>
+
+<!-- ═══ DEMO SETTINGS ═══ -->
+<div class="overlay" id="settings-ov" onclick="closeSettings(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sh-guest">Demo Keys</div>
+    <div class="settings-copy">For quick local demos, paste keys here. For a deployed demo, set server environment variables instead: <strong>OPENAI_API_KEY</strong> and <strong>ELEVENLABS_API_KEY</strong>.</div>
+    <div class="settings-row">
+      <label for="settings-openai">OpenAI API key</label>
+      <input class="settings-input" id="settings-openai" type="password" autocomplete="off" placeholder="Optional if the server has OPENAI_API_KEY">
+      <div class="settings-help">Used only for new-guest inference through the demo server.</div>
+    </div>
+    <div class="settings-row">
+      <label for="settings-eleven">ElevenLabs API key</label>
+      <input class="settings-input" id="settings-eleven" type="password" autocomplete="off" placeholder="Optional if the server has ELEVENLABS_API_KEY">
+      <div class="settings-help">Used for Quick voice brief, Read Next, and Read to Earpiece.</div>
+    </div>
+    <div class="settings-row">
+      <label for="settings-voice">ElevenLabs voice ID</label>
+      <input class="settings-input" id="settings-voice" type="text" autocomplete="off" placeholder="21m00Tcm4TlvDq8ikWAM">
+      <div class="settings-help">Default is Rachel. Swap this for any ElevenLabs voice ID.</div>
+    </div>
+    <div class="sh-btns">
+      <button class="sh-save" onclick="saveSettings()">Save Keys</button>
+      <button class="sh-close" onclick="closeSettings()">Done</button>
+    </div>
+    <button class="speak-full-btn" style="background:transparent;border:1px solid var(--b1);color:var(--cd);" onclick="clearSettings()">Clear local keys</button>
+    <div class="speak-status" id="settings-status"></div>
+  </div>
+</div>
+
+<!-- ═══ TP DETAIL SHEET ═══ -->
+<div class="overlay" id="tp-ov" onclick="closeTpSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sh-src" id="sh-src"></div>
+    <div class="sh-time" id="sh-time"></div>
+    <div class="sh-guest" id="sh-guest"></div>
+    <div class="hc-edit-panel" id="hc-edit-panel">
+      <div class="hc-edit-title">Head Concierge Direct Edit</div>
+      <div class="hc-edit-row"><label for="hc-edit-time">Time</label><input class="hc-edit-input" id="hc-edit-time" type="text"></div>
+      <div class="hc-edit-row"><label for="hc-edit-text">Touchpoint</label><textarea class="hc-edit-textarea" id="hc-edit-text"></textarea></div>
+      <div class="hc-edit-row"><label for="hc-edit-action">Action</label><textarea class="hc-edit-textarea" id="hc-edit-action"></textarea></div>
+      <div class="hc-edit-row"><label for="hc-edit-pred">Prediction</label><textarea class="hc-edit-textarea" id="hc-edit-pred"></textarea></div>
+    </div>
+    <div class="sh-txt" id="sh-txt"></div>
+    <div class="sh-anec" id="sh-anec" style="display:none;"></div>
+    <div class="sh-pred" id="sh-pred" style="display:none;"></div>
+    <div class="sh-action" id="sh-action" style="display:none;"></div>
+    <div class="sh-pm" id="sh-pm" style="display:none;"></div>
+    <div class="sh-train" id="sh-train" style="display:none;">
+      <div class="sh-train-lbl">For New Staff</div>
+      <div class="sh-train-txt" id="sh-train-txt"></div>
+    </div>
+    <span class="sh-lbl">Note / follow-up</span>
+    <textarea class="sh-note-inp" id="sh-note" placeholder="Add context or action…"></textarea>
+    <div class="sh-btns">
+      <button class="sh-save" onclick="saveTpNote()" id="sh-save-btn">Save Note</button>
+      <button class="sh-close" onclick="closeTpSheet()">Done</button>
+    </div>
+    <button class="speak-full-btn" onclick="speakTP()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zm-1 13.93A7 7 0 0 1 5 8H3a9 9 0 0 0 8 8.94V20H8v2h8v-2h-3v-3.07A9 9 0 0 0 21 8h-2a7 7 0 0 1-7 6.93z"/></svg>
+      Read to Earpiece
+    </button>
+    <div class="speak-status" id="speak-status"></div>
+    <div class="wf-center" id="wf-center"><div class="wf" id="sh-wf">${Array(9).fill('<div class="wb"></div>').join('')}</div></div>
+  </div>
+</div>
+
+<!-- ═══ ORCHESTRATOR ═══ -->
+<div class="orch-overlay" id="orch-ov" onclick="closeOrch(event)">
+  <div class="orch-sheet">
+    <div class="sheet-handle"></div>
+    <div class="orch-title">Orchestrate</div>
+    <div class="orch-sub">Describe any change or last-minute development in plain language. Changes are applied instantly — no API key needed.</div>
+
+    <!-- GUEST SELECTOR -->
+    <div style="margin-bottom:11px;">
+      <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cd);margin-bottom:6px;">Which guest</div>
+      <div id="orch-guest-chips" style="display:flex;gap:7px;flex-wrap:wrap;"></div>
+      <div id="orch-target-status" style="font-size:11px;color:var(--cd);margin-top:7px;line-height:1.4;"></div>
+    </div>
+
+    <textarea class="orch-inp" id="orch-inp" placeholder="e.g. Car needs to be moved in 2 hours&#10;e.g. She came back looking much lighter — the visit has turned&#10;e.g. Move dinner to 20:30&#10;e.g. He's having a difficult morning — step back from all contact"></textarea>
+    <div id="orch-ambiguous" style="display:none;background:#2a1a08;border:1px solid var(--todol)44;border-radius:3px;padding:9px 12px;font-size:11px;color:var(--todol);margin-bottom:10px;">
+      Multiple guests are active. Select a guest above or name them in your instruction before generating changes.
+    </div>
+    <button class="orch-run" id="orch-run" onclick="runOrch()">Generate Changes</button>
+    <div class="ld-row" id="orch-ld"><div class="spin"></div> Analysing…</div>
+    <div class="diff-wrap" id="diff-wrap">
+      <div class="diff-summary-card"><div class="diff-summary-lbl">What changes</div><div class="diff-summary-txt" id="diff-summary"></div></div>
+      <div class="diff-count-lbl" id="diff-count"></div>
+      <div id="diff-cards"></div>
+      <div class="diff-approve-row">
+        <button class="diff-approve" onclick="approveDiff()">Apply All</button>
+        <button class="diff-reject" onclick="rejectDiff()">Discard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW GUEST -->
+<div class="ng-overlay" id="ng-overlay">
+  <div class="ng-inner">
+    <div class="topbar" style="position:relative;top:auto;margin:-16px -16px 14px;padding:0 16px;">
+      <button class="tb-back" onclick="closeNG()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="tb-logo">New Guest</div>
+    </div>
+    <div class="ng-sec">Identity</div>
+    <div class="ng-row">
+      <div><label class="ng-lbl" for="ng-name">Name</label><input class="ng-inp" id="ng-name" type="text" placeholder="Ms. Aiko Yamamoto"/></div>
+      <div><label class="ng-lbl" for="ng-tier">Tier</label><select class="ng-sel" id="ng-tier"><option>Ultra-luxury</option><option>Luxury</option><option>Premium</option><option>Standard</option></select></div>
+    </div>
+    <div class="ng-row">
+      <div><label class="ng-lbl" for="ng-prop">Property</label><input class="ng-inp" id="ng-prop" type="text" placeholder="Aman Tokyo"/></div>
+      <div><label class="ng-lbl" for="ng-city">City</label><input class="ng-inp" id="ng-city" type="text" placeholder="Tokyo"/></div>
+    </div>
+    <div class="ng-sec">Visit</div>
+    <div class="ng-field"><label class="ng-lbl" for="ng-purp">Purpose</label>
+      <select class="ng-sel" id="ng-purp"><option value="">Select…</option><option>Annual reset / decompression</option><option>Anniversary celebration</option><option>Business trip</option><option>Honeymoon</option><option>Grief / recovery</option><option>Creative retreat</option><option>Birthday celebration</option><option>Solo exploration</option><option>Romantic escape</option><option>Cultural immersion</option></select>
+    </div>
+    <div class="ng-row">
+      <div><label class="ng-lbl" for="ng-in">Check-in</label><input class="ng-inp" id="ng-in" type="text" placeholder="May 16, 2026"/></div>
+      <div><label class="ng-lbl" for="ng-out">Check-out</label><input class="ng-inp" id="ng-out" type="text" placeholder="May 20, 2026"/></div>
+    </div>
+    <div class="ng-row">
+      <div><label class="ng-lbl" for="ng-party">Party</label><select class="ng-sel" id="ng-party"><option>Solo</option><option>Couple</option><option>Family</option><option>Group</option></select></div>
+      <div><label class="ng-lbl" for="ng-svc">Service Style</label><select class="ng-sel" id="ng-svc"><option value="">Unknown</option><option>Invisible</option><option>Attentive</option><option>Full service</option><option>Self-sufficient</option></select></div>
+    </div>
+    <div class="ng-sec">Preferences</div>
+    <div class="ng-row">
+      <div><label class="ng-lbl" for="ng-sleep">Sleep Pattern</label><select class="ng-sel" id="ng-sleep"><option value="">Unknown</option><option>Early riser</option><option>Late riser</option><option>Standard</option><option>Jet lag</option></select></div>
+      <div><label class="ng-lbl" for="ng-diet">Dietary</label><input class="ng-inp" id="ng-diet" type="text" placeholder="e.g. no shellfish"/></div>
+    </div>
+    <div class="ng-row">
+      <div><label class="ng-lbl" for="ng-room">Room Preference</label><input class="ng-inp" id="ng-room" type="text" placeholder="High floor, quiet"/></div>
+      <div><label class="ng-lbl" for="ng-prior">Prior Properties</label><input class="ng-inp" id="ng-prior" type="text" placeholder="Aman Venice"/></div>
+    </div>
+    <div class="ng-sec">Context</div>
+    <div class="ng-field"><label class="ng-lbl" for="ng-agent">Agent Note</label><textarea class="ng-ta" id="ng-agent" placeholder="Pre-arrival note from travel agent…"></textarea></div>
+    <div class="ng-field"><label class="ng-lbl" for="ng-obs">Arrival Observation</label><textarea class="ng-ta" id="ng-obs" placeholder="What you noticed on arrival…"></textarea></div>
+    <div class="ng-btns">
+      <button class="ng-create" id="ng-create" onclick="createGuest()">Create & Generate Plan</button>
+      <button class="ng-cancel" onclick="closeNG()">Cancel</button>
+    </div>
+    <div class="ld-row" id="ng-ld"><div class="spin"></div> Generating visit plan…</div>
+  </div>
+</div>
+
+<!-- SUGGEST CHANGE OVERLAY (non-orchestrator roles) -->
+<div class="overlay" id="suggest-ov" onclick="closeSuggest(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:3px;">Cue Maria</div>
+    <div style="font-size:11px;color:var(--cd);margin-bottom:13px;">Send a cue to the Head Concierge. Maria can edit it, accept it, and orchestrate the change across teams.</div>
+    <div class="ping-sheet-role" id="suggest-role-lbl"></div>
+    <div class="ping-sheet-ctx" id="suggest-ctx"></div>
+    <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--cd);margin-bottom:6px;">Cue for Maria</div>
+    <textarea class="ping-note-inp" id="suggest-note" placeholder="What should Maria know? e.g. Guest seemed uncomfortable — hold the spa recommendation for today."></textarea>
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;background:var(--amber);color:var(--f0);border:none;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:3px;cursor:pointer;" onclick="sendSuggestion()">Send Cue</button>
+      <button style="flex:1;background:transparent;color:var(--cd);border:1px solid var(--b1);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:3px;cursor:pointer;" onclick="closeSuggest()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PING OVERLAY -->
+<div class="overlay" id="ping-ov" onclick="closePing(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:3px;">Ping</div>
+    <div style="font-size:11px;color:var(--cd);margin-bottom:13px;">Send a voice note to a specific role. They hear it in their earpiece when they tap Read Next.</div>
+    <div class="ping-sheet-role" id="ping-role-lbl"></div>
+    <div class="ping-sheet-ctx" id="ping-ctx"></div>
+    <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--cd);margin-bottom:6px;">Add a note <span style="opacity:.6;">(optional — leave blank to send the touchpoint as-is)</span></div>
+    <textarea class="ping-note-inp" id="ping-note" placeholder="Any additional context for this role…"></textarea>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button style="flex:1;background:var(--vio);color:#fff;border:none;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:3px;cursor:pointer;" onclick="sendPing()">Send Ping</button>
+      <button style="flex:1;background:transparent;color:var(--cd);border:1px solid var(--b1);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:3px;cursor:pointer;" onclick="closePing()">Cancel</button>
+    </div>
+    <div id="ping-queue-section" style="display:none;">
+      <div style="font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--cd);margin-bottom:9px;">Sent Pings</div>
+      <div id="ping-queue"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ STATE ════════════════════════════════════════════════════════════════════
+const GUESTS = [];
+const STAFF_PROFILES = {
+  maria:{id:'maria', name:'Maria', role:'Concierge', title:'Head Concierge', mode:'orchestrator', meta:'Hotel-wide command view. Can review team cues and orchestrate changes across teams.'},
+  maya:{id:'maya', name:'Maya', role:'Concierge', title:'Front Desk Concierge', mode:'role', meta:'Focused front desk queue. Can handle guest-facing requests and cue Maria for cross-team changes.'},
+  sofia:{id:'sofia', name:'Sofia', role:'Spa', title:'Spa Concierge', mode:'role', meta:'Focused spa queue. Can mark services done and cue Maria when guest comfort changes the plan.'},
+  leo:{id:'leo', name:'Leo', role:'Valet', title:'Valet Concierge', mode:'role', meta:'Focused valet queue. Can update timing, luggage, arrival, and car handoff cues for Maria.'},
+  nina:{id:'nina', name:'Nina', role:'Restaurant', title:'Restaurant Concierge', mode:'role', meta:'Focused dining queue. Can cue Maria on table, bottle, timing, or dietary changes.'},
+  omar:{id:'omar', name:'Omar', role:'Housekeeping', title:'Housekeeping', mode:'role', meta:'Focused room-readiness queue. Can cue Maria on privacy, amenities, room state, or timing changes.'}
+};
+const STAFF_NAME = 'Maria';
+const DEFAULT_ROLE = 'Concierge';
+let currentStaff = null;
+let selectedRole = DEFAULT_ROLE;
+let shiftTPs = [];          // flat list of {tp, guest, dayLabel} for this role
+let shiftDoneIds = new Set();
+const shiftDoneByStaff = {};
+let selectedTP = null;
+let selectedTPGuest = null;
+let pendingDiff = null;
+let currentAudio = null;
+let isPlaying = false;
+let autoRead = false;
+let clockInterval = null;
+let countdownInterval = null;
+let autoCheckInterval = null;
+
+// ═══ KEYS / DEMO API ════════════════════════════════════════════════════════
+function openAIKey(){ return localStorage.getItem('orch-openai') || ''; }
+function elKey(){  return localStorage.getItem('orch-el')  || ''; }
+function elevenVoiceId(){ return localStorage.getItem('orch-eleven-voice') || '21m00Tcm4TlvDq8ikWAM'; }
+function ensureOpenAI(){ let k=openAIKey(); if(!k){openSettings();} return k; }
+function ensureEl(){ let k=elKey(); if(!k){openSettings();} return k; }
+
+function openSettings(){
+  const ov = document.getElementById('settings-ov');
+  if(!ov) return;
+  const openai = document.getElementById('settings-openai');
+  const eleven = document.getElementById('settings-eleven');
+  const voice = document.getElementById('settings-voice');
+  const status = document.getElementById('settings-status');
+  if(openai) openai.value = openAIKey();
+  if(eleven) eleven.value = elKey();
+  if(voice) voice.value = elevenVoiceId();
+  if(status) status.textContent = location.protocol === 'file:' ? 'Tip: run the demo server for safer voice proxying. File mode uses the browser key directly.' : 'Server mode can use saved browser keys or environment variables.';
+  ov.classList.add('show');
+}
+function closeSettings(evt){
+  if(evt && evt.target !== document.getElementById('settings-ov')) return;
+  document.getElementById('settings-ov').classList.remove('show');
+}
+function saveSettings(){
+  const openai = document.getElementById('settings-openai').value.trim();
+  const eleven = document.getElementById('settings-eleven').value.trim();
+  const voice = document.getElementById('settings-voice').value.trim();
+  if(openai) localStorage.setItem('orch-openai', openai); else localStorage.removeItem('orch-openai');
+  if(eleven) localStorage.setItem('orch-el', eleven); else localStorage.removeItem('orch-el');
+  if(voice) localStorage.setItem('orch-eleven-voice', voice); else localStorage.removeItem('orch-eleven-voice');
+  const status = document.getElementById('settings-status');
+  if(status) status.textContent = 'Saved locally for this browser.';
+}
+function clearSettings(){
+  localStorage.removeItem('orch-openai');
+  localStorage.removeItem('orch-el');
+  localStorage.removeItem('orch-eleven-voice');
+  openSettings();
+  const status = document.getElementById('settings-status');
+  if(status) status.textContent = 'Local keys cleared.';
+}
+
+async function generateTouchpointsWithChatGPT(prompt){
+  const headers = {'Content-Type':'application/json'};
+  const browserKey = openAIKey();
+  if(browserKey) headers['x-openai-key'] = browserKey;
+  const res = await fetch('/api/generate-touchpoints', {
+    method:'POST',
+    headers,
+    body:JSON.stringify({prompt})
+  });
+  if(!res.ok){
+    const msg = await res.text().catch(()=>'');
+    throw new Error(msg || `OpenAI proxy ${res.status}`);
+  }
+  return res.json();
+}
+
+// ═══ DATE UTILS ══════════════════════════════════════════════════════════════
+function uid(){ return 'x'+Date.now()+Math.random().toString(36).slice(2,5); }
+const MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function parseDate(str){
+  if(!str) return null;
+  const m = str.match(/(\w+)\s+(\d+),?\s*(\d{4})/);
+  return m ? new Date(parseInt(m[3]), MONTHS[m[1]]||0, parseInt(m[2])) : null;
+}
+function dayCount(a,b){ const da=parseDate(a),db=parseDate(b); if(!da||!db)return 4; return Math.max(1,Math.round((db-da)/86400000)); }
+function shiftDate(str,n){ const dt=parseDate(str); if(!dt)return str; dt.setDate(dt.getDate()+n); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+// Parse a "HH:MM" or "~HH:MM" time string into minutes since midnight
+function parseTimeMin(str){
+  if(!str) return null;
+  const m = str.replace('~','').trim().match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return null;
+  return parseInt(m[1])*60 + parseInt(m[2]);
+}
+function nowMin(){ const n=new Date(); return n.getHours()*60+n.getMinutes(); }
+function minToDisplay(min){ if(min===null)return '--'; return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0'); }
+function minsUntil(targetMin){ const diff=targetMin-nowMin(); return diff; }
+
+// ═══ PLACEMAKERS ═════════════════════════════════════════════════════════════
+const PLACEMAKERS = {
+  'Menlo Park':[{pillar:'Food',name:'Palo Alto Farmers Market',tip:'Saturday morning, California Ave, 12 min by car'},{pillar:'Culture',name:'Stanford Theatre',tip:'Classic cinema in Palo Alto, 10 min by car'},{pillar:'Craft',name:'Allied Arts Guild',tip:'Studios and gardens, Menlo Park, quiet weekday access'},{pillar:'Wellness',name:'Sense Spa Sand Hill',tip:'On property, low-contact reset protocol'},{pillar:'Art',name:'Cantor Arts Center',tip:'Stanford campus, private docent access when available'}],
+  Paris:[{pillar:'Food',name:"Marché d'Aligre",tip:'Local market, 12e, mornings'},{pillar:'Culture',name:'Fondation Louis Vuitton',tip:'Private guided access available'},{pillar:'Wellness',name:'Institut Sisley',tip:'Faubourg-Saint-Honoré, discreet'}],
+  Tokyo:[{pillar:'Food',name:'Tsukiji Outer Market',tip:'Mornings only — arrive by 8am'},{pillar:'Culture',name:'21_21 Design Sight',tip:'Roppongi, design-forward, quiet weekdays'},{pillar:'Craft',name:'Yanaka Pottery',tip:'Traditional neighbourhood, walking access'}],
+  Dubai:[{pillar:'Culture',name:'Al Serkal Avenue',tip:'Arts district, Al Quoz, Tue–Sat'},{pillar:'Adventure',name:'Desert Reserve',tip:'Private dawn safari, 45 min from property'}],
+  Singapore:[{pillar:'Food',name:'Lau Pa Sat',tip:'Victorian cast-iron market, Raffles Place'},{pillar:'Gardens',name:'Gardens by the Bay',tip:'Dawn walk before 8am is extraordinary'}],
+  'New York':[{pillar:'Culture',name:'The Morgan Library',tip:'Intimate, rarely crowded'},{pillar:'Food',name:"Russ & Daughters",tip:'Houston St — go at opening'},{pillar:'Art',name:'Gagosian Upper East Side',tip:'Private previews for collectors'}],
+  Rome:[{pillar:'Food',name:"Campo de' Fiori",tip:'Morning market until noon'},{pillar:'Culture',name:'Borghese Gallery',tip:'Book ahead — intimate by design'}],
+};
+function getPMs(city){ return PLACEMAKERS[city]||[]; }
+
+// ═══ SEED DATA ════════════════════════════════════════════════════════════════
+function seed(){
+  GUESTS.push({
+    id:'g1', name:'Mrs. Elena Vasquez', tier:'Ultra-luxury', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Late riser',dietary:'No shellfish',svc:'Invisible',room:'Suite 812',prior:'Rosewood Paris'},
+    agentNote:'Senior partner, Madrid. Annual reset. Literary. No fuss. 48h to decompress.',
+    crossMemory:[
+      {type:'failure',visit:'Visit 1',text:'Offered gallery day 2 — she did not come. Never offer cultural events before day 4.'},
+      {type:'pattern',visit:'Visit 2',text:'Day 3 emergence: she initiates contact, usually asks about a bookshop. That is the turn.'},
+    ],
+    visits:[
+      {
+        id:'v1a',visitNum:1,property:'Rosewood Sand Hill',city:'Menlo Park',
+        checkin:'May 10, 2024',checkout:'May 14, 2024',
+        purpose:'First annual reset / decompression',status:'past',
+        days:[
+          {date:'May 10, 2024',label:'Day 1',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'16:00',source:'Concierge',sourceClass:'s-concierge',text:'Arrived alone. Asked for no itinerary and no check-in calls.',anecdote:'"I just need the room to be quiet."',note:'Invisible service preference established.',tags:['arrival','preference'],trainingCtx:'First-visit explicit boundaries are high-signal data. Preserve them across future stays.',placemakerRef:null,evolved:true},
+          ]},
+          {date:'May 11, 2024',label:'Day 2',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'14:00',source:'Concierge',sourceClass:'s-concierge',text:'Offered a private gallery slot too early in the stay. Guest declined and did not re-engage that afternoon.',anecdote:null,note:'Failure captured: do not offer cultural programming before day 4.',tags:['failure','learning'],trainingCtx:'A declined recommendation can be more valuable than an accepted one if the reason is preserved.',placemakerRef:null,evolved:true},
+          ]},
+          {date:'May 13, 2024',label:'Day 4',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'10:30',source:'Concierge',sourceClass:'s-concierge',text:'Asked for a quiet bookshop walk. Responded well to one handwritten card, not a list.',anecdote:'"One good place is better than five options."',note:'Prefers single curated recommendations.',tags:['pattern','literary'],trainingCtx:'For this guest, choice architecture matters: one option protects the reset.',placemakerRef:'Stanford Theatre',evolved:true},
+          ]},
+        ]
+      },
+      {
+        id:'v1b',visitNum:2,property:'Rosewood Paris',city:'Paris',
+        checkin:'Apr 18, 2025',checkout:'Apr 22, 2025',
+        purpose:'Annual reset / decompression',status:'past',
+        days:[
+          {date:'Apr 18, 2025',label:'Day 1',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'15:30',source:'Agent',sourceClass:'s-agent',text:'Agent requested same low-contact protocol from Menlo Park visit.',anecdote:'"She chose Rosewood Paris because Sand Hill understood not to over-serve."',note:'Cross-property preference transfer confirmed.',tags:['cross-property','trust'],trainingCtx:'Luxury continuity means a guest should not have to retrain every property.',placemakerRef:null,evolved:true},
+          ]},
+          {date:'Apr 20, 2025',label:'Day 3',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'11:15',source:'Concierge',sourceClass:'s-concierge',text:'Guest initiated at desk and asked for a bookshop and quiet lunch walk.',anecdote:null,note:'Day 3 emergence repeated.',tags:['pattern','emergence'],trainingCtx:'A repeated day-of-stay behavior becomes a predictive pattern for the next visit.',placemakerRef:"Marché d'Aligre",evolved:true},
+          ]},
+          {date:'Apr 21, 2025',label:'Day 4',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'19:30',source:'Restaurant',sourceClass:'s-restaurant',text:'Longer dinner. Ordered before menu and stayed 90 minutes.',anecdote:'"She was finally in the room with us, not just passing through."',note:'Dinner length is a useful settle-state signal.',tags:['settled'],trainingCtx:'Duration can be an emotional signal when the guest says very little.',placemakerRef:null,evolved:true},
+          ]},
+        ]
+      },
+      {
+      id:'v1',visitNum:3,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 14, 2026',checkout:'May 19, 2026',
+      purpose:'Annual reset / decompression',status:'current',
+      days:[
+        {date:'May 14, 2026',label:'Day 1',status:'past',touchpoints:[
+          {id:uid(),type:'past',time:'15:00',source:'Agent',sourceClass:'s-agent',text:'Pre-arrival note confirmed. Third annual visit.',anecdote:'"She asks specifically for Suite 812 now."',note:'Quintessentially Travel.',tags:['trust'],trainingCtx:'When an agent note carries this familiarity, treat it as a briefing from someone who knows this guest better than the property currently does.',placemakerRef:null,evolved:true},
+          {id:uid(),type:'past',time:'16:30',source:'Concierge',sourceClass:'s-concierge',text:'Arrived. Single tote, Knausgård vol. 6. Nodded at concierge.',anecdote:'"Year three. The nod is a full conversation now."',note:null,tags:['ritual','trust'],trainingCtx:'A returning guest who nods and keeps walking is not being rude — the relationship is established. Match their energy.',placemakerRef:null,evolved:true},
+        ]},
+        {date:'May 15, 2026',label:'Day 2 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'past',time:'11:00',source:'Spa',sourceClass:'s-spa',text:'Left treatment 15 min early. Declined tea.',anecdote:null,note:null,tags:['recovery'],trainingCtx:'Leaving early is not negative. 45 minutes was the right amount for a reset guest.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'past',time:'19:00',source:'Restaurant',sourceClass:'s-restaurant',text:'Madera, Table 12 terrace corner. Ordered burrata starter and grilled halibut. 80 minutes.',anecdote:'"She ordered before the menu."',note:'Wine preference logged: Domaine Leflaive Puligny-Montrachet 2018, one glass only, served at 11°C.',tags:['settled','emerging','wine'],trainingCtx:'When a guest orders before seeing the menu, they are signalling deep comfort.',placemakerRef:null,evolved:true},
+          {id:uid(),type:'predicted',time:'21:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: quiet return to suite. No requests.',prediction:'Based on prior two visits she returns to her room by 21:00 on day 2.',action:'→ No action. Ensure DND is respected if lit.',note:null,tags:['predicted'],trainingCtx:'Predicted inaction is as important as predicted action. Knowing when to do nothing is a senior concierge skill.',placemakerRef:null,evolved:false},
+        ]},
+        {date:'May 16, 2026',label:'Day 3',status:'future',touchpoints:[
+          {id:uid(),type:'predicted',time:'10:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: she initiates — asks about a bookshop or walk.',prediction:'Pattern confirmed across two prior visits. Day 3 is the turn.',action:'→ Prepare one handwritten card: Kepler’s Books, 1010 El Camino Real, Menlo Park. Backup: Bell’s Books, 536 Emerson St, Palo Alto. Present only if she initiates.',note:null,tags:['predicted','emergence','key'],trainingCtx:'Restraint on days 1 and 2 creates the opening on day 3. This is the most important moment of the stay.',placemakerRef:'Palo Alto Farmers Market',evolved:false},
+          {id:uid(),type:'predicted',time:'13:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Expected: first room service request.',prediction:'After day 3 emergence, appetite returns.',action:'→ Place the light lunch card on the writing desk by 11:45. Highlight burrata, tomato consommé, and mint tea. No call or knock unless guest rings.',note:null,tags:['predicted'],trainingCtx:'A menu card left without a call is a form of care. The absence of pressure is the gesture.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'19:30',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: dinner, Madera, Table 12 terrace corner.',prediction:'Longer dinners from day 3 onward.',action:'→ Hold Madera Table 12 from 19:15. Pre-chill Domaine Leflaive Puligny-Montrachet 2018 to 11°C; offer one glass after still water. Backup if unavailable: Roulot Bourgogne Blanc 2020.',note:'Last starter: burrata. Last main: grilled halibut. Do not present a full wine list unless asked.',tags:['predicted','wine'],trainingCtx:'Holding the same table and bottle without being asked is institutional memory made physical.',placemakerRef:null,evolved:false},
+        ]},
+        {date:'May 17, 2026',label:'Day 4',status:'future',touchpoints:[
+          {id:uid(),type:'predicted',time:'10:00',source:'Spa',sourceClass:'s-spa',text:'Expected: spa visit, self-initiated.',prediction:'Day 4 spa is pattern.',action:'→ Keep morning slot open. No contact. No upsell.',note:null,tags:['predicted'],trainingCtx:'She left early on day 2 because she had enough. She comes back when she wants more.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'14:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: may ask about cultural programming.',prediction:'Open to cultural suggestions from day 4 onward.',action:'→ Offer one sentence only: Stanford Theatre has a 17:40 classic film screening; car time 10 min. Backup: private docent viewing at Cantor Arts Center on Stanford campus.',note:null,tags:['predicted'],trainingCtx:'The failure from visit 1 exists for this moment. The system is the institutional memory a senior colleague would otherwise carry alone.',placemakerRef:'Stanford Theatre',evolved:false},
+        ]},
+        {date:'May 18, 2026',label:'Day 5 · Checkout',status:'future',touchpoints:[
+          {id:uid(),type:'predicted',time:'11:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: late checkout, quiet departure.',prediction:'She has never asked for late checkout but has lingered past 11am.',action:'→ Pre-authorise checkout to 13:00 in Opera. Ask valet to stage black S-Class at 12:30, passenger rear left clear, no lobby announcement.',note:null,tags:['predicted'],trainingCtx:'Anticipating the unspoken ask is the highest form of service.',placemakerRef:null,evolved:false},
+        ]},
+      ]
+      }
+    ]
+  });
+
+  GUESTS.push({
+    id:'g2', name:'Mr. Haruki Tanaka', tier:'Luxury', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Standard',dietary:'None',svc:'Self-sufficient',room:'Garden Suite',prior:'Aman Tokyo'},
+    agentNote:'Documentary filmmaker, Osaka. Anti-tourist. Craft, authentic local food. Second Menlo Park visit.',
+    crossMemory:[
+      {type:'anecdote',visit:'Visit 1',text:'"Returned from the California Ave market smelling of grilled corn and coffee. Most satisfied we had seen him."'},
+      {type:'pattern',visit:'Visit 1',text:'Room always in ordered chaos. Replace green tea daily. Touch nothing else.'},
+    ],
+    visits:[
+      {
+        id:'v2a',visitNum:1,property:'Rosewood Sand Hill',city:'Menlo Park',
+        checkin:'Oct 2, 2025',checkout:'Oct 6, 2025',
+        purpose:'Solo exploration / documentary research',status:'past',
+        days:[
+          {date:'Oct 2, 2025',label:'Day 1',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'14:30',source:'Agent',sourceClass:'s-agent',text:'Agent described guest as anti-tourist, craft-focused, and self-directed.',anecdote:null,note:'Avoid packaged tours or over-explaining.',tags:['arrival','preference'],trainingCtx:'A guest can want access without wanting to be managed. Separate enablement from control.',placemakerRef:null,evolved:true},
+          ]},
+          {date:'Oct 3, 2025',label:'Day 2',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'09:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Desk covered with notes, batteries, books. Green tea empty. Team replaced tea only.',anecdote:'"Room in ordered chaos — touch nothing except tea."',note:'Room reset should preserve working layout.',tags:['room-pattern','creative'],trainingCtx:"Creative disorder may be the guest's system. Preserve it unless hygiene or safety requires intervention.",placemakerRef:null,evolved:true},
+          ]},
+          {date:'Oct 4, 2025',label:'Day 3',status:'past',touchpoints:[
+            {id:uid(),type:'past',time:'21:40',source:'Concierge',sourceClass:'s-concierge',text:'Returned from Palo Alto Farmers Market visibly satisfied. Asked no follow-up questions.',anecdote:'"Smelled of grilled corn and coffee. Most satisfied we had seen him."',note:'Palo Alto Farmers Market is a proven local fit.',tags:['local-fit','food'],trainingCtx:'A successful local fit should become reusable evidence, not a one-off memory.',placemakerRef:'Palo Alto Farmers Market',evolved:true},
+          ]},
+        ]
+      },
+      {
+      id:'v2',visitNum:2,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 12, 2026',checkout:'May 17, 2026',
+      purpose:'Solo exploration / cultural immersion',status:'current',
+      days:[
+        {date:'May 12, 2026',label:'Day 1',status:'past',touchpoints:[
+          {id:uid(),type:'past',time:'14:00',source:'Agent',sourceClass:'s-agent',text:'Second visit confirmed. Same suite.',anecdote:'"He told the agent he wanted to go back to the California Ave market."',note:null,tags:['returning'],trainingCtx:'Same suite = continuity requested. Everything associated with it should be consistent.',placemakerRef:'Palo Alto Farmers Market',evolved:true},
+        ]},
+        {date:'May 13, 2026',label:'Day 2',status:'past',touchpoints:[
+          {id:uid(),type:'past',time:'09:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Room: green tea empty, books open, notes on desk.',anecdote:'"Working, not resting."',note:'Replaced tea only.',tags:['creative'],trainingCtx:"A filmmaker's notes are as important as a surgeon's instruments. Do not reset a working environment.",placemakerRef:null,evolved:true},
+          {id:uid(),type:'past',time:'23:00',source:'Concierge',sourceClass:'s-concierge',text:'Returned late. Smiled.',anecdote:'"Smelled of street food. More relaxed than all day."',note:null,tags:['satisfied'],trainingCtx:'Stay out of his way while making everything easy to return to.',placemakerRef:null,evolved:true},
+        ]},
+        {date:'May 14, 2026',label:'Day 3 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'past',time:'08:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Green tea replaced. Room in creative chaos.',anecdote:null,note:null,tags:['pattern'],trainingCtx:'Following the pattern without being told is institutional knowledge working correctly.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'16:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: may ask about artisan workshop or cinema.',prediction:'Day 3 afternoon is when he seeks deeper access experiences.',action:'→ Keep one card ready: Stanford Theatre, classic Japanese film Thursday 18:10. Mention only if he asks. Do not offer to book unless he requests it.',note:null,tags:['predicted'],trainingCtx:'The key word is "if he asks." Proactive sharing breaks the spell with this guest.',placemakerRef:'Stanford Theatre',evolved:false},
+        ]},
+        {date:'May 15, 2026',label:'Day 4',status:'future',touchpoints:[
+          {id:uid(),type:'predicted',time:'10:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: artisan studio visit at Allied Arts Guild.',prediction:'Agent confirmed interest in craft.',action:'→ Put Allied Arts Guild studio hours and 75 Arbor Rd address on a card. No booking — he goes on his own terms.',note:null,tags:['predicted'],trainingCtx:'Access without removing agency. A card with a name is the right level of help.',placemakerRef:'Allied Arts Guild',evolved:false},
+          {id:uid(),type:'predicted',time:'19:00',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: first hotel dinner of the stay.',prediction:'By day 4 he is usually open to one hotel meal.',action:'→ If he appears, seat without delay at counter end seat. Place Tatenokawa 18 Junmai Daiginjo and cold barley tea list nearby. Offer grilled mackerel special only if he asks what is local.',note:null,tags:['predicted','sake'],trainingCtx:'Two visits, same pattern. The restaurant team can be ready without being told.',placemakerRef:null,evolved:false},
+        ]},
+      ]
+      }
+    ]
+  });
+
+  GUESTS.push({
+    id:'g3', name:'Ms. Priya Raman', tier:'Ultra-luxury', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Jet lag',dietary:'Vegan, no cashew',svc:'Attentive',room:'Villa 4',prior:'First Rosewood stay'},
+    agentNote:'First-time guest. Arriving from Singapore after red-eye. Board meeting at VC firm nearby. Needs calm, not ceremony.',
+    crossMemory:[
+      {type:'cold-start',visit:'Pre-arrival',text:'No stay history. Agent note, arrival fatigue, and meeting schedule are the only signals.'},
+      {type:'risk',visit:'Pre-arrival',text:'No cashew. Vegan is preference; cashew is safety-critical.'},
+    ],
+    visits:[{
+      id:'v3',visitNum:1,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 16, 2026',checkout:'May 18, 2026',
+      purpose:'Board meeting / recovery window',status:'current',
+      days:[
+        {date:'May 16, 2026',label:'Day 1 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'predicted',time:'15:05',source:'Concierge',sourceClass:'s-concierge',text:'Expected: cold-start VIP arrival with no stay history.',prediction:'Agent note and red-eye fatigue are the strongest available signals.',action:'→ Maria briefs Valet, Housekeeping, and Madera: no ceremony, fast Villa 4 transfer, cashew removed, vegan dinner option ready.',note:null,tags:['cold-start','orchestration'],trainingCtx:'Cold start is a coordination problem: the head concierge turns sparse signals into a shared operating plan.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'15:20',source:'Valet',sourceClass:'s-valet',text:'Expected: arrival after red-eye, likely fatigued.',prediction:'Cold-start guest with travel fatigue; minimize lobby dwell time.',action:'→ Stage luggage cart and water at arrival court. Car door to Villa 4 transfer under 4 minutes. No welcome speech unless she initiates.',note:null,tags:['cold-start','arrival'],trainingCtx:'Cold start does not mean no service. Use the strongest available signals and reduce friction first.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'16:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Expected: immediate rest before evening prep.',prediction:'Red-eye plus board meeting means the room must work without follow-up.',action:'→ Set blackout, 68°F, still water bedside, phone on silent. Remove cashew snack; replace with berries and plain almonds.',note:'Cashew is safety-critical.',tags:['cold-start','allergy'],trainingCtx:'Allergy data belongs in every department that may place food in the room.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'19:00',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: light solo dinner if she wakes.',prediction:'Likely asks for something simple and plant-based.',action:'→ Keep vegan risotto option ready. Confirm no cashew with chef and server before presenting.',note:null,tags:['dietary','risk'],trainingCtx:'A first dinner is where cold-start data becomes operational trust.',placemakerRef:null,evolved:false},
+        ]},
+        {date:'May 17, 2026',label:'Day 2',status:'future',touchpoints:[
+          {id:uid(),type:'predicted',time:'07:30',source:'Valet',sourceClass:'s-valet',text:'Expected: board meeting transfer to Sand Hill Road.',prediction:'Meeting starts at 08:00; she will value precision over conversation.',action:'→ Stage black sedan at 07:20. Route to 3000 Sand Hill Rd. Driver brief: no small talk, offer phone charger only.',note:null,tags:['business','valet'],trainingCtx:'For business guests, exact timing is part of hospitality.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'17:30',source:'Spa',sourceClass:'s-spa',text:'Expected: decompression request after board day.',prediction:'Agent flagged recovery window after meeting.',action:'→ Hold 18:00 Sense Spa quiet room and 30-minute neck/shoulder slot. Offer only if she returns before 17:45.',note:null,tags:['wellness','cold-start'],trainingCtx:'Hold capacity softly; do not create pressure for a tired guest.',placemakerRef:'Sense Spa Sand Hill',evolved:false},
+        ]},
+      ]
+    }]
+  });
+
+  GUESTS.push({
+    id:'g4', name:'The Whitman Family', tier:'Luxury', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Early riser',dietary:'Child peanut allergy',svc:'Full service',room:'Connecting 221/223',prior:'Rosewood Miramar Beach'},
+    agentNote:'Two adults, two children. Weekend Stanford visit. Parents appreciate invisible prep; children need visible reassurance.',
+    crossMemory:[
+      {type:'pattern',visit:'Visit 1',text:'Parents relax when child needs are handled before they ask: car seats, plain pasta, pool towels.'},
+      {type:'risk',visit:'Visit 1',text:'Peanut allergy belongs on restaurant, in-room amenity, and picnic orders.'},
+    ],
+    visits:[{
+      id:'v4a',visitNum:1,property:'Rosewood Miramar Beach',city:'Santa Barbara',
+      checkin:'Aug 4, 2025',checkout:'Aug 7, 2025',
+      purpose:'Family weekend',status:'past',
+      days:[{date:'Aug 4, 2025',label:'Day 1',status:'past',touchpoints:[
+        {id:uid(),type:'past',time:'17:00',source:'Valet',sourceClass:'s-valet',text:'Car seats were not ready; parent waited 12 minutes.',anecdote:null,note:'Failure captured: car seats must be staged before family departure.',tags:['failure','family'],trainingCtx:'A small logistics miss becomes the whole arrival for parents.',placemakerRef:null,evolved:true},
+      ]}]
+    },{
+      id:'v4',visitNum:2,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 16, 2026',checkout:'May 18, 2026',
+      purpose:'Stanford campus visit / family weekend',status:'current',
+      days:[
+        {date:'May 16, 2026',label:'Day 1 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'predicted',time:'12:30',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Expected: connecting rooms need family reset before arrival.',prediction:'Family arrival creates high luggage and amenity load.',action:'→ Confirm crib removed, two child robes, step stool, extra towels, peanut-free welcome amenity only.',note:null,tags:['family','allergy'],trainingCtx:'Family comfort is built before they enter the room.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'15:00',source:'Valet',sourceClass:'s-valet',text:'Expected: campus loop after check-in.',prediction:'Prior failure around car seats.',action:'→ Install two car seats by 14:45. Keep stroller accessible, not buried under luggage.',note:'This fixes the Miramar miss.',tags:['handoff','valet'],trainingCtx:'Captured failures should change the next property’s behavior.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'18:00',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: early dinner, child-friendly.',prediction:'Family pattern: early dinner before children fade.',action:'→ Hold Madera terrace table near exit. Peanut allergy flagged. Plain pasta and berries available immediately.',note:null,tags:['family','dining'],trainingCtx:'Speed and exit path matter more than culinary explanation for young families.',placemakerRef:null,evolved:false},
+        ]},
+        {date:'May 17, 2026',label:'Day 2',status:'future',touchpoints:[
+          {id:uid(),type:'predicted',time:'09:30',source:'Concierge',sourceClass:'s-concierge',text:'Expected: easy local outing before lunch.',prediction:'Parents prefer one simple option.',action:'→ Offer one option: Cantor Arts Center sculpture garden, low crowd, stroller-friendly. Backup: Allied Arts Guild gardens.',note:null,tags:['local','family'],trainingCtx:'For families, one clear plan beats a long list.',placemakerRef:'Cantor Arts Center',evolved:false},
+        ]},
+      ]
+    }]
+  });
+
+  GUESTS.push({
+    id:'g5', name:'Dr. Samuel Okafor', tier:'Premium', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Standard',dietary:'Halal, no alcohol',svc:'Self-sufficient',room:'Room 418',prior:'None'},
+    agentNote:'Keynote speaker at Stanford Medicine. First stay. Wants quiet, prayer space, and fast breakfast.',
+    crossMemory:[
+      {type:'cold-start',visit:'Pre-arrival',text:'No prior Rosewood history; event schedule and dietary needs are primary signals.'},
+    ],
+    visits:[{
+      id:'v5',visitNum:1,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 15, 2026',checkout:'May 17, 2026',
+      purpose:'Conference keynote',status:'current',
+      days:[
+        {date:'May 15, 2026',label:'Day 1',status:'past',touchpoints:[
+          {id:uid(),type:'past',time:'21:15',source:'Concierge',sourceClass:'s-concierge',text:'Arrived late, declined escort, asked only for breakfast timing.',anecdote:'"Just point me to the elevator."',note:'Self-sufficient and time-sensitive.',tags:['arrival','cold-start'],trainingCtx:'A guest who declines escort may still need precise operational help.',placemakerRef:null,evolved:true},
+        ]},
+        {date:'May 16, 2026',label:'Day 2 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'predicted',time:'14:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: keynote guest returns between sessions.',prediction:'First stay, but schedule suggests a short reset window.',action:'→ Maria checks restaurant and housekeeping alignment: halal tray complete, room refreshed only while away, prayer mat placement untouched.',note:null,tags:['cold-start','handoff'],trainingCtx:'A head concierge can convert cultural preferences into cross-team service rules.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'06:45',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: fast breakfast before keynote.',prediction:'Keynote schedule leaves little margin.',action:'→ Halal breakfast tray ready 06:40: eggs, fruit, coffee. No alcohol-based extracts. Check closed-lid presentation for travel.',note:null,tags:['dietary','business'],trainingCtx:'Fast service still needs cultural precision.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'07:20',source:'Valet',sourceClass:'s-valet',text:'Expected: transfer to Stanford Medicine.',prediction:'Speaker call time 07:45.',action:'→ Sedan at 07:15. Destination: Li Ka Shing Center. Driver confirms quiet route and avoids speaker small talk.',note:null,tags:['business','valet'],trainingCtx:'The car is part of the keynote prep.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'15:30',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Expected: returns to room between sessions.',prediction:'Conference schedule has afternoon gap.',action:'→ Refresh room while away only. Leave prayer mat aligned in closet shelf, not on bed. Add two still waters.',note:null,tags:['privacy','room'],trainingCtx:'Respectful handling of personal ritual objects matters.',placemakerRef:null,evolved:false},
+        ]},
+      ]
+    }]
+  });
+
+  GUESTS.push({
+    id:'g6', name:'Ms. Camille Laurent', tier:'Ultra-luxury', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Late riser',dietary:'Gluten-free',svc:'Invisible',room:'Villa 7',prior:'Rosewood Paris'},
+    agentNote:'Art collector. Considering Stanford/Cantor visit. Concierge lead Maria is covering for Antoine, who is on short leave.',
+    crossMemory:[
+      {type:'handoff',visit:'Antoine leave',text:'Antoine usually handles her art access. Maria needs the condensed relationship memory.'},
+      {type:'pattern',visit:'Visit 2',text:'Never ask about buying art in public. Use “private viewing” language only.'},
+    ],
+    visits:[{
+      id:'v6a',visitNum:2,property:'Rosewood Paris',city:'Paris',
+      checkin:'Feb 10, 2026',checkout:'Feb 14, 2026',
+      purpose:'Collector travel',status:'past',
+      days:[{date:'Feb 12, 2026',label:'Day 3',status:'past',touchpoints:[
+        {id:uid(),type:'past',time:'16:00',source:'Concierge',sourceClass:'s-concierge',text:'Antoine arranged private viewing; guest appreciated zero public acknowledgement.',anecdote:'"Discretion is the service."',note:'Use private viewing wording, never sales language.',tags:['tribal-knowledge','handoff'],trainingCtx:'This is the kind of relationship memory lost when a concierge goes on leave.',placemakerRef:'Fondation Louis Vuitton',evolved:true},
+      ]}]
+    },{
+      id:'v6',visitNum:3,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 16, 2026',checkout:'May 20, 2026',
+      purpose:'Collector meetings / quiet retreat',status:'current',
+      days:[
+        {date:'May 16, 2026',label:'Day 1 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'predicted',time:'11:30',source:'Concierge',sourceClass:'s-concierge',text:'Expected: Antoine handoff gap.',prediction:'Primary relationship owner is on short leave.',action:'→ Maria reviews Antoine handoff: private viewing language only, no public art-purchase talk. Prepare Cantor Arts Center docent contact, not an itinerary.',note:null,tags:['handoff','tribal-knowledge'],trainingCtx:'Leave coverage is where captured tribal knowledge becomes revenue protection.',placemakerRef:'Cantor Arts Center',evolved:false},
+          {id:uid(),type:'predicted',time:'15:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Expected: villa privacy while on calls.',prediction:'Collector meetings likely from room.',action:'→ No service entry 14:30-17:00. Leave gluten-free tea cake outside pantry alcove by 14:15.',note:null,tags:['privacy','dietary'],trainingCtx:'Invisible service sometimes means staging without entering.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'20:00',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: late light dinner in villa.',prediction:'After collector calls she avoids dining room.',action:'→ Gluten-free risotto and chamomile tea available for in-villa order. No dessert cart suggestion.',note:null,tags:['dining','privacy'],trainingCtx:'Prior preference should shape what is not offered.',placemakerRef:null,evolved:false},
+        ]},
+      ]
+    }]
+  });
+
+  GUESTS.push({
+    id:'g7', name:'Mr. Ben Adler', tier:'Standard', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Early riser',dietary:'None',svc:'Attentive',room:'Room 302',prior:'None'},
+    agentNote:'Founder pitching investors. Highly schedule-driven. First stay but high potential repeat guest.',
+    crossMemory:[
+      {type:'cold-start',visit:'Pre-arrival',text:'Founder profile: time compression, presentation anxiety, and transport reliability likely matter most.'},
+    ],
+    visits:[{
+      id:'v7',visitNum:1,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 16, 2026',checkout:'May 17, 2026',
+      purpose:'Investor meetings',status:'current',
+      days:[
+        {date:'May 16, 2026',label:'Day 1 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'predicted',time:'09:15',source:'Concierge',sourceClass:'s-concierge',text:'Expected: printing / deck panic before investor meeting.',prediction:'Founder guests often surface logistics needs at last minute.',action:'→ Keep business center printer ready. Offer one sentence: “We can print or courier changes in under 10 minutes.”',note:null,tags:['cold-start','business'],trainingCtx:'Anticipating operational panic creates immediate trust for first-time guests.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'10:30',source:'Valet',sourceClass:'s-valet',text:'Expected: tight departure to VC meeting.',prediction:'Meeting at 11:00 nearby.',action:'→ Stage car at 10:20. Destination: Sand Hill Road offices. Keep trunk clear for roll-up banner.',note:null,tags:['business','valet'],trainingCtx:'Small physical details can decide whether a meeting starts calmly.',placemakerRef:null,evolved:false},
+          {id:uid(),type:'predicted',time:'18:30',source:'Restaurant',sourceClass:'s-restaurant',text:'Expected: celebratory or recovery drink after pitch.',prediction:'Mood unknown; needs quick read.',action:'→ If upbeat, offer terrace seat and local non-sweet cocktail. If flat, offer room-service dinner quietly.',note:null,tags:['mood','dining'],trainingCtx:'A service branch can be conditional on mood rather than fixed.',placemakerRef:null,evolved:false},
+        ]},
+      ]
+    }]
+  });
+
+  GUESTS.push({
+    id:'g8', name:'Ms. Aiko Nakamura', tier:'Luxury', property:'Rosewood Sand Hill', city:'Menlo Park',
+    struct:{sleep:'Jet lag',dietary:'Pescatarian',svc:'Invisible',room:'Room 510',prior:'Aman Tokyo'},
+    agentNote:'Designer visiting Stanford d.school. Quiet, visual thinker. Appreciates craft and gardens; dislikes being “guided.”',
+    crossMemory:[
+      {type:'pattern',visit:'Prior property note',text:'Give her a map and one contact name; do not narrate the experience.'},
+    ],
+    visits:[{
+      id:'v8',visitNum:1,property:'Rosewood Sand Hill',city:'Menlo Park',
+      checkin:'May 15, 2026',checkout:'May 19, 2026',
+      purpose:'Design research / solo retreat',status:'current',
+      days:[
+        {date:'May 15, 2026',label:'Day 1',status:'past',touchpoints:[
+          {id:uid(),type:'past',time:'17:20',source:'Concierge',sourceClass:'s-concierge',text:'Accepted property map, declined verbal tour.',anecdote:'"I like to find the edges myself."',note:'Offer objects, not explanations.',tags:['preference','design'],trainingCtx:'Some guests want tools, not guidance.',placemakerRef:null,evolved:true},
+        ]},
+        {date:'May 16, 2026',label:'Day 2 · Today',status:'today',touchpoints:[
+          {id:uid(),type:'predicted',time:'11:00',source:'Concierge',sourceClass:'s-concierge',text:'Expected: asks for one craft/garden destination.',prediction:'Designer profile and prior property note align.',action:'→ Prepare small card: Allied Arts Guild, 75 Arbor Rd, studios and gardens. Include one contact name only.',note:null,tags:['local','craft'],trainingCtx:'PlaceMaker value is highest when it matches the guest’s preferred level of agency.',placemakerRef:'Allied Arts Guild',evolved:false},
+          {id:uid(),type:'predicted',time:'14:30',source:'Spa',sourceClass:'s-spa',text:'Expected: jet-lag recovery but no heavy treatment.',prediction:'Jet lag plus quiet style.',action:'→ Hold 25-minute foot recovery slot. Offer as “available if useful,” not as a recommendation.',note:null,tags:['wellness','invisible'],trainingCtx:'For invisible-service guests, wording changes whether help feels like pressure.',placemakerRef:'Sense Spa Sand Hill',evolved:false},
+          {id:uid(),type:'predicted',time:'20:00',source:'Housekeeping',sourceClass:'s-housekeeping',text:'Expected: late work session in room.',prediction:'Designer guest likely sketches after campus visit.',action:'→ Leave extra pencils, blank paper, and green tea outside door during turndown. Do not organize desk.',note:null,tags:['room','creative'],trainingCtx:'Preserving the working surface is part of service.',placemakerRef:null,evolved:false},
+        ]},
+      ]
+    }]
+  });
+}
+
+// ═══ CLOCK ═══════════════════════════════════════════════════════════════════
+function startClock(){
+  if(clockInterval) clearInterval(clockInterval);
+  tickClock();
+  clockInterval = setInterval(tickClock, 10000);
+}
+function tickClock(){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const dateStr = now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  const el = document.getElementById('home-time');
+  const del = document.getElementById('home-date');
+  const top = document.getElementById('home-clock-top');
+  if(el) el.textContent = hh+':'+mm;
+  if(del) del.textContent = dateStr.toUpperCase();
+  if(top) top.textContent = hh+':'+mm;
+}
+
+// ═══ HOME RENDER ══════════════════════════════════════════════════════════════
+function renderHome(){
+  // Only render if home view is active — elements don't exist in other views
+  const homeView = document.getElementById('view-home');
+  if(!homeView || !homeView.classList.contains('active')) return;
+
+  const upcomingEl = document.getElementById('upcoming-list');
+  const upcomingLbl = document.getElementById('upcoming-lbl');
+  if(!upcomingEl) return;
+
+  const upcoming = [];
+  GUESTS.forEach(guest => {
+    const cv = guest.visits.find(v=>v.status==='current');
+    if(!cv) return;
+    // Apply guest filter
+    if(homeGuestFilter !== 'All' && guest.id !== homeGuestFilter) return;
+    cv.days.forEach(dayObj => {
+      if(dayObj.status==='past') return;
+      dayObj.touchpoints.forEach(tp => {
+        if(tp.type==='predicted'){
+          if(homeRoleFilter !== 'All' && tp.source !== homeRoleFilter) return;
+          const tMin = parseTimeMin(tp.time);
+          upcoming.push({tp, guest, dayObj, tMin});
+        }
+      });
+    });
+  });
+  upcoming.sort((a,b) => (a.tMin??9999) - (b.tMin??9999));
+
+  renderGuestFilterStrip();
+
+  const filterLabel = homeRoleFilter === 'All' ? 'Upcoming Touchpoints' : `Upcoming · ${homeRoleFilter}`;
+  if(upcoming.length){
+    if(upcomingLbl) upcomingLbl.textContent = filterLabel;
+    const srcColors = {Concierge:'var(--sl)',Spa:'#5a9a9a',Restaurant:'var(--al)',Housekeeping:'var(--rl)',Valet:'var(--vil)',Agent:'var(--gl)'};
+    upcomingEl.innerHTML = upcoming.slice(0,8).map(({tp,guest,dayObj}) => `
+      <div class="upcoming-card" onclick="openGuestTP('${guest.id}','${tp.id}')">
+        <div class="uc-head">
+          <div class="uc-guest">${guest.name}</div>
+          <div class="uc-time">${tp.time}</div>
+        </div>
+        <div class="uc-src" style="color:${srcColors[tp.source]||'var(--cm)'};">${tp.source} · ${dayObj.label}</div>
+        <div class="uc-txt">${tp.text}</div>
+        ${tp.action ? `<div class="uc-action">${tp.action}</div>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+          <div class="uc-property">${guest.property} · ${guest.city}</div>
+          <button class="ping-btn" onclick="event.stopPropagation();openPing('${guest.id}','${tp.id}')">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zm-1 13.93A7 7 0 0 1 5 8H3a9 9 0 0 0 8 8.94V20H8v2h8v-2h-3v-3.07A9 9 0 0 0 21 8h-2a7 7 0 0 1-7 6.93z"/></svg>
+            Ping
+          </button>
+        </div>
+      </div>`).join('');
+  } else {
+    if(upcomingLbl) upcomingLbl.textContent = filterLabel;
+    upcomingEl.innerHTML = `<div style="font-size:11px;color:var(--cd);padding:12px 0;">No upcoming ${homeRoleFilter==='All'?'':''+homeRoleFilter+' '}touchpoints.</div>`;
+  }
+
+  // Guest list -- active guests first, then others
+  const gl = document.getElementById('home-guest-list');
+  const active = GUESTS.filter(g => g.visits.some(v=>v.status==='current'));
+  const others = GUESTS.filter(g => !g.visits.some(v=>v.status==='current'));
+
+  const renderGuest = guest => {
+    const cv = guest.visits.find(v=>v.status==='current') || guest.visits[guest.visits.length-1];
+    const next = getNextTP(cv);
+    const isActive = (cv ? cv.status : undefined) === 'current';
+    return `<div class="guest-strip ${isActive?'guest-active':''} ${homeGuestFilter===guest.id?'guest-focused':''}" onclick="openGuestSheet('${guest.id}')">
+      <div style="flex:1;min-width:0;">
+        <div class="gs-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${guest.name}</div>
+        <div style="font-size:9px;color:var(--gold);font-style:italic;margin:1px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cv?.purpose||''}</div>
+        ${next ? `<div class="gs-next" style="font-size:8px;"><div class="gc-next-dot"></div>${next.source} · ${next.tp.time}</div>` : ''}
+      </div>
+      <div class="gs-arrow" style="font-size:14px;">›</div>
+    </div>`;
+  };
+
+  gl.innerHTML =
+    (active.length ? `<div class="section-lbl" style="margin-bottom:8px;">In House</div>` + active.map(renderGuest).join('') : '') +
+    (others.length ? `<div class="section-lbl" style="margin-top:14px;margin-bottom:8px;">Other Guests</div>` + others.map(renderGuest).join('') : '');
+}
+
+function focusGuest(guestId){
+  // Toggle: if already filtered to this guest, clear filter; otherwise scope to them
+  homeGuestFilter = homeGuestFilter === guestId ? 'All' : guestId;
+  renderHome();
+}
+
+function getNextTP(visitObj){
+  if(!visitObj) return null;
+  for(const dayObj of visitObj.days){
+    if(dayObj.status==='past') continue;
+    for(const tp of dayObj.touchpoints){
+      if(tp.type==='predicted') return {tp, dayLabel:dayObj.label, source:tp.source};
+    }
+  }
+  return null;
+}
+
+// ═══ GUEST SHEET (from home) ══════════════════════════════════════════════════
+function memoryItems(guest, type){
+  return (guest.crossMemory||[]).filter(m=>!type || m.type===type);
+}
+
+function guestHistoryHtml(guest){
+  const visits = guest.visits || [];
+  if(!visits.length) return '<div style="font-size:13px;color:var(--cd);">No visit history yet.</div>';
+  return visits.map(visit => {
+    const days = visit.days || [];
+    const touchpoints = days.flatMap(day => (day.touchpoints||[]).map(tp => ({day, tp})));
+    const past = touchpoints.filter(x=>x.tp.type==='past');
+    const predicted = touchpoints.filter(x=>x.tp.type==='predicted');
+    return `<div style="background:var(--f2);border:1px solid var(--b1);border-radius:4px;padding:11px 12px;margin-bottom:9px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:7px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:3px;">Visit ${visit.visitNum || ''} · ${visit.status || 'archived'}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--cream);line-height:1.25;">${visit.purpose || 'No purpose set'}</div>
+        </div>
+        <div style="font-size:12px;color:var(--cd);text-align:right;">${visit.checkin || ''}${visit.checkout ? '<br>'+visit.checkout : ''}</div>
+      </div>
+      <div style="font-size:13px;color:var(--cm);line-height:1.55;margin-bottom:7px;">${visit.property || guest.property} · ${visit.city || guest.city} · ${past.length} observed · ${predicted.length} predicted</div>
+      ${touchpoints.map(({day,tp}) => `
+        <div style="padding:7px 0;border-top:1px solid var(--b1);">
+          <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${tp.type==='predicted'?'var(--predl)':'var(--cd)'};margin-bottom:2px;">${day.label || ''} · ${tp.time || ''} · ${tp.source || ''} · ${tp.type}</div>
+          <div style="font-size:13px;color:var(--cm);line-height:1.5;">${tp.text || ''}</div>
+          ${tp.anecdote ? `<div style="font-size:13px;color:var(--cream);font-style:italic;line-height:1.5;margin-top:3px;">${tp.anecdote}</div>` : ''}
+          ${tp.action ? `<div style="font-size:13px;color:#c8a84a;line-height:1.5;margin-top:3px;">${tp.action}</div>` : ''}
+          ${tp.note ? `<div style="font-size:12px;color:var(--sl);line-height:1.5;margin-top:3px;">Note: ${tp.note}</div>` : ''}
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function openGuestSheet(gid){
+  window._openGuestId = gid;
+  const guest = GUESTS.find(g=>g.id===gid);
+  if(!guest) return;
+  const cv = guest.visits.find(v=>v.status==='current')||guest.visits[guest.visits.length-1];
+  const srcColors = {Concierge:'var(--sl)',Spa:'#5a9a9a',Restaurant:'var(--al)',Housekeeping:'var(--rl)',Valet:'var(--vil)',Agent:'var(--gl)'};
+
+  // Key memory: the failure to never repeat
+  const failure = guest.crossMemory ? guest.crossMemory.find(m=>m.type==='failure') : null;
+  // Pattern: what defines this guest
+  const pattern = guest.crossMemory ? guest.crossMemory.find(m=>m.type==='pattern') : null;
+  // Today's upcoming TPs
+  const todayTPs = cv && cv.days ? cv.days.flatMap(function(d){
+    return (d.status==='today'||d.status==='future') ? d.touchpoints : [];
+  }).slice(0,4) : [];
+
+  const s = guest.struct||{};
+  const memories = guest.crossMemory || [];
+  const localBenefits = getPMs(guest.city);
+  const observedCount = (guest.visits||[]).flatMap(v=>v.days||[]).flatMap(d=>d.touchpoints||[]).filter(tp=>tp.type==='past').length;
+  const predictedCount = (guest.visits||[]).flatMap(v=>v.days||[]).flatMap(d=>d.touchpoints||[]).filter(tp=>tp.type==='predicted').length;
+
+  const content = document.getElementById('guest-sheet-content');
+  content.innerHTML = `
+    <!-- PURPOSE — the north star -->
+    <div style="background:linear-gradient(135deg,var(--f3),var(--f2));border:1px solid var(--gold);border-radius:4px;padding:14px;margin-bottom:14px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#b8925a55,transparent);"></div>
+      <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;">Purpose of Visit ${cv ? '· Visit '+cv.visitNum : ''}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:300;color:var(--cream);line-height:1.3;margin-bottom:4px;">${cv && cv.purpose ? cv.purpose : 'No purpose set'}</div>
+      <div style="font-size:10px;color:var(--cd);">${guest.property} · ${guest.city} · ${cv ? (cv.checkin||'')+(cv.checkout?' — '+cv.checkout:'') : ''}</div>
+    </div>
+
+    <!-- DATA PAIN POINTS -->
+    <div style="background:var(--predB);border:1px solid var(--predl)44;border-radius:4px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--predl);margin-bottom:8px;">Continuity Layer</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+        <div style="padding:9px 10px;background:var(--pred);border-left:3px solid var(--predl);border-radius:3px;">
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--predl);margin-bottom:3px;">If a concierge goes on leave</div>
+          <div style="font-size:13px;color:var(--cm);line-height:1.55;">The next person sees purpose, current plan, failures to avoid, observed patterns, and role-specific upcoming actions without needing a verbal handoff.</div>
+        </div>
+        <div style="padding:9px 10px;background:var(--f3);border-left:3px solid var(--gold);border-radius:3px;">
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:3px;">Cold-start reducer</div>
+          <div style="font-size:13px;color:var(--cm);line-height:1.55;">Structured preferences plus ${observedCount} observed touchpoint${observedCount!==1?'s':''} and ${predictedCount} predicted touchpoint${predictedCount!==1?'s':''} create a usable first plan before staff personally know the guest.</div>
+        </div>
+        <div style="padding:9px 10px;background:var(--f3);border-left:3px solid var(--sage);border-radius:3px;">
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sl);margin-bottom:3px;">Tribal knowledge captured</div>
+          <div style="font-size:13px;color:var(--cm);line-height:1.55;">${memories.length ? memories.map(m=>m.text).join(' ') : 'No cross-visit memories captured yet. Notes and observations added during service become reusable context here.'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESSENTIAL FACTS — what you must know -->
+    ${failure ? `<div style="background:#3a100811;border:1px solid var(--rose)44;border-left:3px solid var(--rose);border-radius:3px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--rl);margin-bottom:4px;">Never do this</div>
+      <div style="font-size:11px;color:var(--cm);line-height:1.5;">${failure.text}</div>
+    </div>` : ''}
+    ${pattern ? `<div style="background:var(--f3);border:1px solid var(--gold)33;border-left:3px solid var(--gold);border-radius:3px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--gl);margin-bottom:4px;">What defines them</div>
+      <div style="font-size:11px;color:var(--cm);line-height:1.5;">${pattern.text}</div>
+    </div>` : ''}
+
+    <!-- SERVICE CONTEXT -->
+    ${s.svc||s.sleep||s.dietary ? `<div style="display:flex;gap:12px;flex-wrap:wrap;padding:9px 12px;background:var(--f2);border:1px solid var(--b1);border-radius:3px;margin-bottom:12px;">
+      ${s.svc ? `<div><div style="font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--cd);margin-bottom:2px;">Service</div><div style="font-size:10px;color:var(--cm);">${s.svc}</div></div>` : ''}
+      ${s.sleep && s.sleep!=='Unknown' ? `<div><div style="font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--cd);margin-bottom:2px;">Sleep</div><div style="font-size:10px;color:var(--cm);">${s.sleep}</div></div>` : ''}
+      ${s.dietary && s.dietary!=='None' ? `<div><div style="font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--cd);margin-bottom:2px;">Dietary</div><div style="font-size:10px;color:var(--cm);">${s.dietary}</div></div>` : ''}
+    </div>` : ''}
+
+    <!-- LOCATION BENEFITS -->
+    <div style="background:var(--f2);border:1px solid var(--b1);border-radius:4px;padding:11px 12px;margin-bottom:12px;">
+      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:7px;">Location Benefits · ${guest.city}</div>
+      ${localBenefits.length ? localBenefits.map(pm => `
+        <div style="padding:7px 0;border-top:1px solid var(--b1);">
+          <div style="font-size:13px;color:var(--cream);line-height:1.35;">${pm.name} <span style="font-size:12px;color:var(--cd);">· ${pm.pillar}</span></div>
+          <div style="font-size:13px;color:var(--cm);line-height:1.45;">${pm.tip}</div>
+        </div>`).join('') : `<div style="font-size:13px;color:var(--cd);line-height:1.5;">No curated local benefits are loaded for ${guest.city} yet. Add PlaceMakers for this city to make recommendations available to Concierge and New Guest generation.</div>`}
+    </div>
+
+    <!-- TODAY'S PLAN -->
+    ${todayTPs.length ? `<div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--cd);margin-bottom:8px;">Today's Plan</div>
+    ${todayTPs.map(function(tp){ return `
+      <div style="padding:8px 11px;background:${tp.type==='predicted'?'var(--predB)':'var(--f2)'};border:1px solid ${tp.type==='predicted'?'var(--predl)33':'var(--b1)'};border-radius:3px;margin-bottom:6px;cursor:pointer;" onclick="openGuestTP('${guest.id}','${tp.id}')">
+        <div style="font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:${srcColors[tp.source]||'var(--cm)'};margin-bottom:3px;">${tp.source} · ${tp.time}</div>
+        <div style="font-size:11px;color:${tp.type==='predicted'?'var(--skl)':'var(--cm)'};line-height:1.45;">${tp.text}</div>
+        ${tp.action ? '<div style="font-size:10px;color:#c8a84a;margin-top:3px;">'+tp.action+'</div>' : ''}
+      </div>`; }).join('')}` : '<div style="font-size:11px;color:var(--cd);">No upcoming touchpoints.</div>'}
+
+    <!-- FULL HISTORY -->
+    <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cd);margin:15px 0 8px;">Historical Record</div>
+    ${guestHistoryHtml(guest)}`;
+
+  document.getElementById('guest-ov').classList.add('show');
+}
+function closeGuest(evt){ if(evt&&evt.target!==document.getElementById('guest-ov'))return; document.getElementById('guest-ov').classList.remove('show'); }
+
+function openGuestTP(gid, tpid){
+  const guest = GUESTS.find(g=>g.id===gid);
+  if(!guest) return;
+  const cv = guest.visits.find(v=>v.status==='current')||guest.visits[guest.visits.length-1];
+  let foundTP = null;
+  if(cv && cv.days){
+    cv.days.forEach(function(dayObj){
+      dayObj.touchpoints.forEach(function(tp){ if(tp.id===tpid) foundTP=tp; });
+    });
+  }
+  if(!foundTP) return;
+  document.getElementById('guest-ov').classList.remove('show');
+  openTpSheet(foundTP, guest);
+}
+
+
+// ═══ AGENDA ═══════════════════════════════════════════════════════════════════
+let orchAgenda = [];    // [{id, text, done, guestName, source}]
+let suggestions = [];  // [{id, senderId, senderName, senderTitle, role, guestName, guestId, tpText, suggestion, status, ts}]
+let activeSuggestionId = null;
+
+function seedDemoSuggestions(){
+  if(suggestions.length) return;
+  const guest = GUESTS.find(g=>g.name.includes('Vasquez')) || GUESTS[0];
+  if(!guest) return;
+  suggestions.push({
+    id: uid(),
+    senderId: 'sofia',
+    senderName: 'Sofia',
+    senderTitle: 'Spa Concierge',
+    role: 'Spa',
+    guestName: guest.name,
+    guestId: guest.id,
+    tpText: 'Expected: may accept a quiet decompression option.',
+    suggestion: 'Guest looked overstimulated after returning from lunch. Suggest holding any spa upsell and only offering the quiet steam room if she asks.',
+    status: 'pending',
+    actioned: false,
+    ts: Date.now() - 900000
+  });
+}
+
+function renderAgenda(){
+  const section = document.getElementById('orch-agenda-section');
+  const list = document.getElementById('orch-agenda-list');
+  if(!section || !list) return;
+  if(!currentStaff || currentStaff.mode !== 'orchestrator'){ section.style.display='none'; return; }
+  section.style.display = 'block';
+  const pending = orchAgenda.filter(a=>!a.done);
+  const done = orchAgenda.filter(a=>a.done);
+  if(!orchAgenda.length){
+    list.innerHTML = '<div style="font-size:11px;color:var(--cd);">No actions yet — orchestrate something to generate your agenda.</div>';
+    return;
+  }
+  list.innerHTML = [
+    ...pending.map(a=>`
+      <div class="agenda-row">
+        <button class="agenda-check" onclick="toggleAgenda('${a.id}')" aria-label="Mark agenda item done"></button>
+        <div style="flex:1;">
+          <div class="agenda-text">${a.text}</div>
+          <div class="agenda-meta">${a.guestName}${a.source?' · '+a.source:''}</div>
+        </div>
+      </div>`),
+    ...done.map(a=>`
+      <div class="agenda-row" style="opacity:.45;">
+        <button class="agenda-check done" onclick="toggleAgenda('${a.id}')" aria-label="Mark agenda item not done">✓</button>
+        <div class="agenda-text" style="text-decoration:line-through;">${a.text}</div>
+      </div>`)
+  ].join('');
+}
+
+function toggleAgenda(id){
+  const item = orchAgenda.find(a=>a.id===id); if(!item) return;
+  item.done = !item.done;
+  renderAgenda();
+}
+
+function buildAgendaFromDiff(diff){
+  // After a diff is approved, derive orchestrator personal actions from changes
+  if(!diff || !currentStaff || currentStaff.mode !== 'orchestrator') return;
+  (diff.changes||[]).forEach(ch=>{
+    const actionText = ch.new || '';
+    // Only create agenda items for changes that imply a physical action
+    if(!/→/.test(actionText) && !/handwritten|pre-authoris|hold|card|ready|confirm|brief|note/i.test(actionText)) return;
+    const clean = agendaActionText(actionText);
+    if(!clean) return;
+    // Avoid duplicates
+    if(orchAgenda.some(a=>a.text===clean)) return;
+    const guestName = ch.scope ? ch.scope.split(' · ')[0] : 'Guest';
+    orchAgenda.push({id:uid(), text:clean, done:false, guestName, source:ch.role});
+  });
+  renderAgenda();
+}
+
+function agendaActionText(actionText){
+  const stripped = (actionText||'')
+    .replace(/^→\s*/,'')
+    .replace(/\s*\[(?:Staff\s+)?Note:.*?\]\s*/gi,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+  if(!stripped) return '';
+  if(stripped.length <= 150) return stripped;
+  const firstSentence = stripped.match(/^.{40,150}?[.!?](?:\s|$)/);
+  return (firstSentence ? firstSentence[0] : stripped.slice(0,147) + '...').trim();
+}
+
+// ═══ SUGGESTIONS ══════════════════════════════════════════════════════════════
+function renderSuggestions(){
+  const section = document.getElementById('suggestions-section');
+  const list = document.getElementById('suggestions-list');
+  const count = document.getElementById('suggestions-count');
+  if(!section||!list) return;
+  const pending = suggestions.filter(s=>!s.actioned);
+  if(!currentStaff || currentStaff.mode !== 'orchestrator' || !pending.length){ section.style.display='none'; return; }
+  section.style.display='block';
+  if(count) count.textContent = pending.length + ' pending';
+  list.innerHTML = pending.map(s=>`
+    <div style="background:var(--f2);border:1px solid var(--amber)33;border-radius:3px;padding:9px 11px;margin-bottom:7px;">
+      <div style="font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--al);margin-bottom:3px;">Cue pending · ${s.senderName || s.role}${s.senderTitle ? ' · '+s.senderTitle : ''} · ${s.guestName}</div>
+      <div style="font-size:10px;color:var(--cd);margin-bottom:4px;font-style:italic;">Re: ${s.tpText}</div>
+      <textarea id="suggest-edit-${s.id}" class="ping-note-inp" style="height:74px;margin-bottom:8px;">${s.suggestion}</textarea>
+      <div style="display:flex;gap:7px;">
+        <button onclick="reviewSuggestion('${s.id}')" style="background:var(--sage);color:var(--f0);border:none;font-family:'Jost',sans-serif;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer;">Accept / Edit</button>
+        <button onclick="dismissSuggestion('${s.id}')" style="background:transparent;color:var(--cd);border:1px solid var(--b1);font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer;">Dismiss</button>
+      </div>
+    </div>`).join('');
+}
+
+function cueStatusLabel(status){
+  return ({
+    pending:'Pending',
+    in_review:'In review',
+    applied:'Applied',
+    dismissed:'Dismissed'
+  })[status || 'pending'] || 'Pending';
+}
+
+function renderCueStatus(){
+  const section = document.getElementById('cue-status-section');
+  const list = document.getElementById('cue-status-list');
+  const count = document.getElementById('cue-status-count');
+  if(!section || !list) return;
+  if(currentStaff && currentStaff.mode === 'orchestrator'){
+    section.style.display = 'none';
+    return;
+  }
+  const mine = suggestions
+    .filter(s => (currentStaff && s.senderId === currentStaff.id) || (!s.senderId && s.role === selectedRole))
+    .sort((a,b)=>(b.ts||0)-(a.ts||0))
+    .slice(0,4);
+  if(!mine.length){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  if(count) count.textContent = mine.length + ' sent';
+  list.innerHTML = mine.map(s=>`
+    <div class="cue-status-card">
+      <div class="cue-status-top">
+        <div class="cue-status-meta">${s.guestName || 'Guest'}${s.tpText ? ' · '+s.tpText : ''}</div>
+        <span class="cue-pill ${s.status || 'pending'}">${cueStatusLabel(s.status)}</span>
+      </div>
+      <div class="cue-status-text">${s.suggestion}</div>
+    </div>`).join('');
+}
+
+function reviewSuggestion(id){
+  const s = suggestions.find(x=>x.id===id); if(!s) return;
+  const editEl = document.getElementById('suggest-edit-' + id);
+  const edited = editEl ? editEl.value.trim() : s.suggestion;
+  if(edited) s.suggestion = edited;
+  s.status = 'in_review';
+  activeSuggestionId = id;
+  if(s.guestId){
+    orchSelectedGuestId = s.guestId;
+  }
+  openOrch();
+  document.getElementById('orch-inp').value = s.suggestion;
+  renderSuggestions();
+  renderCueStatus();
+}
+
+function dismissSuggestion(id){
+  const s = suggestions.find(x=>x.id===id); if(!s) return;
+  s.status = 'dismissed';
+  s.actioned = true;
+  renderSuggestions();
+  renderCueStatus();
+}
+
+// Suggest overlay (non-orchestrator)
+let activeSuggestTP = null;
+let activeSuggestGuest = null;
+
+function openSuggest(tpId){
+  const item = shiftTPs.find(x=>x.tp.id===tpId); if(!item) return;
+  activeSuggestTP = item.tp; activeSuggestGuest = item.guest;
+  document.getElementById('suggest-role-lbl').textContent = 'Cue · ' + item.tp.source + ' · ' + item.guest.name;
+  document.getElementById('suggest-ctx').textContent = item.tp.text + (item.tp.action?' '+item.tp.action:'');
+  document.getElementById('suggest-note').value = '';
+  document.getElementById('suggest-ov').classList.add('show');
+}
+
+function openGeneralSuggest(){
+  activeSuggestTP = null;
+  activeSuggestGuest = GUESTS.find(g=>g.visits.some(v=>v.status==='current')) || null;
+  document.getElementById('suggest-role-lbl').textContent = 'Cue · ' + selectedRole + ' to Maria';
+  document.getElementById('suggest-ctx').textContent = 'Use this when there is no specific touchpoint yet, or the guest need spans multiple teams.';
+  document.getElementById('suggest-note').value = '';
+  document.getElementById('suggest-ov').classList.add('show');
+}
+
+function closeSuggest(evt){
+  if(evt&&evt.target!==document.getElementById('suggest-ov'))return;
+  document.getElementById('suggest-ov').classList.remove('show');
+}
+
+function sendSuggestion(){
+  const note = document.getElementById('suggest-note').value.trim(); if(!note) return;
+  suggestions.push({
+    id: uid(),
+    senderId: currentStaff ? currentStaff.id : null,
+    senderName: currentStaff ? currentStaff.name : selectedRole,
+    senderTitle: currentStaff ? currentStaff.title : selectedRole,
+    role: selectedRole,
+    guestName: (activeSuggestGuest ? activeSuggestGuest.name : "")||'Guest',
+    guestId: activeSuggestGuest ? activeSuggestGuest.id : null,
+    tpText: (activeSuggestTP && activeSuggestTP.text ? activeSuggestTP.text.substring(0,60) : "")||'',
+    suggestion: note, status: 'pending', actioned: false, ts: Date.now()
+  });
+  document.getElementById('suggest-ov').classList.remove('show');
+  renderSuggestions();
+  renderCueStatus();
+}
+
+// ═══ BRING UP TO SPEED ════════════════════════════════════════════════════════
+let briefingText = '';
+let briefingVoiceText = '';
+const voiceCache = new Map();
+
+function cleanVoiceText(text){
+  return (text || '')
+    .replace(/^→\s*/, '')
+    .replace(/\[[^\]]+\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function bringUpToSpeed(){
+  const panel = document.getElementById('speed-panel');
+  const content = document.getElementById('speed-content');
+  const ld = document.getElementById('speed-ld');
+  const status = document.getElementById('speed-status');
+  panel.style.display = 'block';
+  content.innerHTML = '<span style="color:var(--cd);">Composing briefing…</span>';
+  ld.style.display = 'flex';
+  if(status) status.textContent = '';
+
+  // Build briefing from live data -- no API needed
+  const lines = [];
+  const activeGuests = GUESTS.filter(g=>g.visits.some(v=>v.status==='current'));
+  const voiceItems = [];
+
+  activeGuests.forEach(guest=>{
+    const cv = guest.visits.find(v=>v.status==='current'); if(!cv) return;
+    // Head Concierge sees all work; front desk sees only Concierge work.
+    const relevantTPs = cv.days.flatMap(d=>d.touchpoints).filter(tp=>{
+      if(currentStaff && currentStaff.mode === 'orchestrator') return true;
+      return tp.source===selectedRole;
+    });
+    const upcoming = relevantTPs.filter(tp=>tp.type==='predicted').slice(0,1);
+    const keyMemory = (guest.crossMemory || []).find(m=>m.type==='failure') || (guest.crossMemory || []).find(m=>m.type==='pattern') || (guest.crossMemory || [])[0];
+    const next = upcoming[0];
+    const avoid = (guest.crossMemory || []).find(m=>m.type==='failure');
+
+    let guestBlock = `<div class="brief-card">`;
+    guestBlock += `<div class="brief-card-head">
+      <div class="brief-name">${guest.name}</div>
+      <div class="brief-tier">${guest.tier || ''}</div>
+    </div>`;
+    guestBlock += `<div class="brief-purpose">${cv.purpose}</div>`;
+    if(keyMemory) guestBlock += `<div class="brief-line"><strong>Memory</strong> ${keyMemory.text}</div>`;
+    if(next){
+      guestBlock += `<div class="brief-line"><strong>Next</strong> ${next.time} · ${next.source} · ${next.text}</div>`;
+      if(next.action) guestBlock += `<div class="brief-line action"><strong>Do</strong> ${next.action.replace(/^→\\s*/,'')}</div>`;
+    } else {
+      guestBlock += `<div class="brief-line">No upcoming ${currentStaff && currentStaff.mode === 'orchestrator'?'':'role-specific '}touchpoint.</div>`;
+    }
+    if(avoid) guestBlock += `<div class="brief-line avoid"><strong>Avoid</strong> ${avoid.text}</div>`;
+    guestBlock += `</div>`;
+    lines.push(guestBlock);
+
+    if(next && voiceItems.length < 5){
+      const action = cleanVoiceText(next.action || next.text);
+      const memory = keyMemory ? cleanVoiceText(keyMemory.text) : '';
+      voiceItems.push(`${guest.name}: ${next.time}, ${next.source}. ${action}${memory ? `. Watch for: ${memory}` : ''}`);
+    }
+  });
+
+  if(!lines.length){
+    content.innerHTML = '<div style="color:var(--cd);">No active guests for your role right now.</div>';
+  } else {
+    content.innerHTML = lines.join('');
+  }
+
+  // Build plain text version for voice
+  briefingText = activeGuests.map(guest=>{
+    const cv = guest.visits.find(v=>v.status==='current'); if(!cv) return '';
+    const next = cv.days.flatMap(d=>d.touchpoints)
+      .filter(tp=>tp.type==='predicted'&&((currentStaff && currentStaff.mode === 'orchestrator')||tp.source===selectedRole))
+      .slice(0,1)[0];
+    const keyMemory = (guest.crossMemory || []).find(m=>m.type==='failure') || (guest.crossMemory || []).find(m=>m.type==='pattern') || (guest.crossMemory || [])[0];
+    const memory = keyMemory && keyMemory.text ? keyMemory.text : '';
+    const nextText = next ? `Next: ${next.time}, ${next.source}, ${next.text}. ${(next.action||'').replace(/^→\s*/,'')}` : 'No immediate touchpoint.';
+    return `${guest.name}. ${cv.purpose}. ${memory} ${nextText}`;
+  }).filter(Boolean).join('. Next guest: ');
+  briefingVoiceText = voiceItems.length
+    ? `Quick handoff for ${currentStaff ? currentStaff.name : 'the team'}. ${voiceItems.join('. ')}.`
+    : briefingText;
+
+  ld.style.display = 'none';
+  if(status) status.textContent = voiceItems.length ? `${voiceItems.length} priority items ready for voice.` : '';
+}
+
+let briefingAudio = null;
+async function speakBriefing(){
+  if(!briefingText){ bringUpToSpeed(); }
+  const btn = document.getElementById('speed-speak-btn');
+  const status = document.getElementById('speed-status');
+  btn.textContent = 'Generating…'; btn.disabled = true;
+  if(briefingAudio){ briefingAudio.pause(); briefingAudio=null; }
+  try{
+    if(status) status.textContent = 'Creating a short audio handoff…';
+    const blob = await getVoiceBlob(briefingVoiceText || briefingText, status);
+    const url=URL.createObjectURL(blob);
+    briefingAudio=new Audio(url); briefingAudio.play();
+    btn.textContent='▶ Playing…';
+    briefingAudio.onended=()=>{ btn.textContent='Quick voice brief'; btn.disabled=false; if(status) status.textContent='Done.'; };
+  }catch(e){ btn.textContent='Quick voice brief'; btn.disabled=false; if(status) status.textContent=e.message; }
+}
+
+async function getVoiceBlob(text, statusEl){
+  const cleanText = cleanVoiceText(text).slice(0, 1400);
+  const voiceId = elevenVoiceId();
+  const cacheKey = voiceId + '|' + cleanText;
+  if(voiceCache.has(cacheKey)){
+    if(statusEl) statusEl.textContent = 'Using cached audio.';
+    return voiceCache.get(cacheKey);
+  }
+
+  const browserKey = elKey();
+  const canUseProxy = location.protocol === 'http:' || location.protocol === 'https:';
+  if(canUseProxy){
+    const headers = {'Content-Type':'application/json'};
+    if(browserKey) headers['x-elevenlabs-key'] = browserKey;
+    try{
+      const res = await fetch('/api/voiceover', {
+        method:'POST',
+        headers,
+        body:JSON.stringify({text:cleanText, voiceId})
+      });
+      if(res.ok){
+        const blob = await res.blob();
+        voiceCache.set(cacheKey, blob);
+        return blob;
+      }
+      if(res.status !== 404){
+        const msg = await res.text().catch(()=>'');
+        if(!browserKey) throw new Error(msg || 'Add ElevenLabs key in Keys, or set ELEVENLABS_API_KEY on the server.');
+      }
+    }catch(e){
+      if(!browserKey) throw e;
+      if(statusEl) statusEl.textContent = 'Proxy unavailable, using browser key directly…';
+    }
+  }
+
+  let key = browserKey;
+  if(!key){
+    openSettings();
+    throw new Error('Add ElevenLabs key in Keys, then try voice again.');
+  }
+  const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`,{
+    method:'POST',
+    headers:{'xi-api-key':key,'Content-Type':'application/json'},
+    body:JSON.stringify({text:cleanText,model_id:'eleven_flash_v2_5',voice_settings:{stability:.55,similarity_boost:.78,style:.1,use_speaker_boost:true}})
+  });
+  if(!res.ok) throw new Error('ElevenLabs '+res.status);
+  const blob = await res.blob();
+  voiceCache.set(cacheKey, blob);
+  return blob;
+}
+let homeRoleFilter = 'All';
+// Pings are urgent messages injected directly into a role's shift queue.
+// When a Spa attendant taps Read Next, any pending pings for their role
+// play first — before their next scheduled touchpoint.
+let pendingPings = {};  // { roleName: [{id, text, guestName, ts}] }
+let activePingTP = null;
+let activePingGuest = null;
+
+// Guest filter for home feed
+let homeGuestFilter = 'All';
+
+function setHomeRF(role, el){
+  homeRoleFilter = role;
+  document.querySelectorAll('.role-filter-tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderHome();
+}
+
+function setHomeGF(guestId, el){
+  homeGuestFilter = guestId;
+  document.querySelectorAll('.guest-filter-chip').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderHome();
+}
+
+function renderGuestFilterStrip(){
+  const strip = document.getElementById('guest-filter-strip');
+  if(!strip) return;
+  const active = GUESTS.filter(g=>g.visits.some(v=>v.status==='current'));
+  if(active.length<=1){ strip.style.display='none'; return; }
+  strip.style.display='flex';
+  strip.innerHTML =
+    `<button class="home-role-tab guest-filter-chip ${homeGuestFilter==='All'?'active':''}" onclick="setHomeGF('All',this)">All guests</button>` +
+    active.map(g=>`<button class="home-role-tab guest-filter-chip ${homeGuestFilter===g.id?'active':''}" onclick="setHomeGF('${g.id}',this)">${g.name.split(' ').pop()}</button>`).join('');
+}
+
+function launchShift(role){
+  selectedRole = role;
+  currentStaff = Object.values(STAFF_PROFILES).find(s=>s.role===role) || currentStaff || STAFF_PROFILES.maria;
+  startShift();
+}
+
+function setStaffChrome(){
+  const staff = currentStaff || STAFF_PROFILES.maria;
+  const top = document.getElementById('home-staff-top');
+  const cardName = document.getElementById('staff-card-name');
+  const cardRole = document.getElementById('staff-card-role');
+  const cardMeta = document.getElementById('staff-card-meta');
+  if(top) top.textContent = staff.name + ' · ' + staff.title;
+  if(cardName) cardName.textContent = staff.name;
+  if(cardRole) cardRole.textContent = staff.title;
+  if(cardMeta) cardMeta.textContent = staff.meta;
+  const guidance = document.getElementById('role-guidance');
+  if(guidance){
+    if(staff.mode === 'orchestrator'){
+      guidance.innerHTML = '<div class="role-guidance-title">Command view</div><div class="role-guidance-copy">Review team cues, edit them if needed, then use Orchestrate Change when the plan needs to move across teams.</div>';
+    } else {
+      guidance.innerHTML = '<div class="role-guidance-title">Your role view</div><div class="role-guidance-copy">Work your own queue. If guest behavior changes the plan, send Maria a cue from here or from any touchpoint.</div><button class="tb-btn outline" style="margin-top:10px;" onclick="openGeneralSuggest()">Cue Maria</button>';
+    }
+  }
+}
+
+function loginAs(staffId){
+  closeTransientSurfaces();
+  currentStaff = STAFF_PROFILES[staffId] || STAFF_PROFILES.maria;
+  selectedRole = currentStaff.role;
+  if(!shiftDoneByStaff[currentStaff.id]) shiftDoneByStaff[currentStaff.id] = new Set();
+  shiftDoneIds = shiftDoneByStaff[currentStaff.id];
+  const login = document.getElementById('view-login');
+  const home = document.getElementById('view-home');
+  const shift = document.getElementById('view-shift');
+  if(login) login.classList.remove('active');
+  if(home) home.classList.remove('active');
+  if(shift) shift.classList.remove('active');
+  setStaffChrome();
+  startShift();
+}
+
+function signOut(){
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  if(autoCheckInterval){ clearInterval(autoCheckInterval); autoCheckInterval=null; }
+  closeTransientSurfaces();
+  ['view-home','view-shift'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  const login = document.getElementById('view-login');
+  if(login) login.classList.add('active');
+  const fab = document.getElementById('orch-fab');
+  if(fab) fab.style.display = 'none';
+  const guestRecordsBtn = document.getElementById('guest-records-btn');
+  if(guestRecordsBtn) guestRecordsBtn.style.display = 'none';
+}
+
+function closeTransientSurfaces(){
+  ['guest-ov','tp-ov','orch-ov','suggest-ov','ping-ov','settings-ov','ng-overlay'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && el.classList && el.classList.remove) el.classList.remove('show');
+  });
+  const speed = document.getElementById('speed-panel');
+  if(speed) speed.style.display = 'none';
+  pendingDiff = null;
+  selectedTP = null;
+  selectedTPGuest = null;
+  activeSuggestTP = null;
+  activeSuggestGuest = null;
+  activePingTP = null;
+  activePingGuest = null;
+}
+
+function openGuestRecords(){
+  if(!currentStaff || currentStaff.mode !== 'orchestrator') return;
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  if(autoCheckInterval){ clearInterval(autoCheckInterval); autoCheckInterval=null; }
+  document.getElementById('view-login').classList.remove('active');
+  document.getElementById('view-shift').classList.remove('active');
+  document.getElementById('view-home').classList.add('active');
+  setStaffChrome();
+  const fab = document.getElementById('orch-fab');
+  if(fab) fab.style.display = 'flex';
+  renderHome();
+}
+
+function returnToShift(){
+  if(!currentStaff) currentStaff = STAFF_PROFILES.maria;
+  startShift();
+}
+
+function openPing(guestId, tpId){
+  const guest = GUESTS.find(g=>g.id===guestId); if(!guest) return;
+  const cv = guest.visits.find(v=>v.status==='current'); if(!cv) return;
+  let foundTP = null;
+  cv.days.forEach(d=>d.touchpoints.forEach(tp=>{ if(tp.id===tpId) foundTP=tp; }));
+  if(!foundTP) return;
+  activePingTP = foundTP; activePingGuest = guest;
+
+  const roleLbl = document.getElementById('ping-role-lbl');
+  const ctxEl = document.getElementById('ping-ctx');
+  const noteEl = document.getElementById('ping-note');
+  if(roleLbl) roleLbl.textContent = 'To · ' + foundTP.source;
+  if(ctxEl) ctxEl.textContent = foundTP.text + (foundTP.action ? ' ' + foundTP.action : '');
+  if(noteEl) noteEl.value = '';
+  renderPingQueue();
+  document.getElementById('ping-ov').classList.add('show');
+}
+
+function closePing(evt){
+  if(evt && evt.target !== document.getElementById('ping-ov')) return;
+  document.getElementById('ping-ov').classList.remove('show');
+  activePingTP = null; activePingGuest = null;
+}
+
+function sendPing(){
+  if(!activePingTP || !activePingGuest) return;
+  const note = document.getElementById('ping-note').value.trim();
+  const base = [activePingTP.text, activePingTP.action].filter(Boolean).join(' ');
+  const full = note ? base + ' — Orchestrator note: ' + note : base;
+  const role = activePingTP.source;
+  if(!pendingPings[role]) pendingPings[role] = [];
+  pendingPings[role].push({
+    id: uid(), text: full,
+    guestName: activePingGuest.name,
+    ts: Date.now()
+  });
+  document.getElementById('ping-note').value = '';
+  renderPingQueue();
+  // If recipient is currently in their shift, inject into their queue immediately
+  if(selectedRole === role){
+    const urgentTP = {
+      id: uid(), type:'predicted', time:'Now',
+      source: role, sourceClass:'s-'+role.toLowerCase(),
+      text:'⚡ Ping from Orchestrator: ' + full,
+      prediction:null, action:null, note:null,
+      tags:['ping','urgent'], trainingCtx:null, placemakerRef:null, evolved:false
+    };
+    // Inject into first active guest's current visit for this role
+    const targetGuest = GUESTS.find(g=>g.name===activePingGuest.name);
+    const cv = targetGuest ? targetGuest.visits.find(v=>v.status==='current') : null;
+    const todayDay = cv && cv.days ? cv.days.find(d=>d.status==='today'||d.status==='future') : null;
+    if(todayDay){ todayDay.touchpoints.unshift(urgentTP); }
+    renderShift();
+  }
+}
+
+function renderPingQueue(){
+  const queue = document.getElementById('ping-queue');
+  const section = document.getElementById('ping-queue-section');
+  if(!queue || !section) return;
+  const allPings = Object.entries(pendingPings).flatMap(([role,pings])=>
+    pings.map(p=>({...p, role}))
+  ).sort((a,b)=>b.ts-a.ts);
+  if(!allPings.length){ section.style.display='none'; return; }
+  section.style.display = 'block';
+  const srcColors = {Concierge:'var(--sl)',Spa:'#5a9a9a',Restaurant:'var(--al)',Housekeeping:'var(--rl)',Valet:'var(--vil)'};
+  queue.innerHTML = allPings.slice(0,5).map(p=>`
+    <div class="ping-queued">
+      <div style="flex:1;">
+        <div class="pq-role" style="color:${srcColors[p.role]||'var(--sl)'};">→ ${p.role} · ${p.guestName}</div>
+        <div class="pq-txt">${p.text}</div>
+        <div style="font-size:9px;color:var(--cd);margin-top:3px;">Queued for their next Read</div>
+      </div>
+    </div>`).join('');
+}
+
+// Called by non-orchestrator shift view to prepend any pending pings before speakNext
+function consumePingForRole(role){
+  const pings = pendingPings[role];
+  if(!pings || !pings.length) return null;
+  return pings.shift(); // consume oldest ping first
+}
+
+// ═══ SHIFT ════════════════════════════════════════════════════════════════════
+function startShift(){
+  if(!selectedRole) return;
+  if(!currentStaff) currentStaff = STAFF_PROFILES.maria;
+  if(!shiftDoneByStaff[currentStaff.id]) shiftDoneByStaff[currentStaff.id] = new Set();
+  shiftDoneIds = shiftDoneByStaff[currentStaff.id];
+  setStaffChrome();
+  // Build flat list of TPs for this role across all guests
+  shiftTPs = [];
+  GUESTS.forEach(guest => {
+    const cv = guest.visits.find(v=>v.status==='current');
+    if(!cv) return;
+    cv.days.forEach((dayObj, dayIndex) => {
+      if(dayObj.status==='past') return;
+      dayObj.touchpoints.forEach(tp => {
+        if(tp.type==='predicted' && tp.source===selectedRole){
+          shiftTPs.push({tp, guest, dayLabel:dayObj.label, dayStatus:dayObj.status, dayIndex, tMin:parseTimeMin(tp.time)});
+        }
+      });
+    });
+  });
+  // Sort by time
+  shiftTPs.sort((a,b)=>(a.dayIndex-b.dayIndex)||((a.tMin??9999)-(b.tMin??9999)));
+
+  document.getElementById('shift-role-label').textContent = currentStaff.name + ' · ' + currentStaff.title;
+  const login = document.getElementById('view-login');
+  if(login) login.classList.remove('active');
+  document.getElementById('view-home').classList.remove('active');
+  document.getElementById('view-shift').classList.add('active');
+  const fab = document.getElementById('orch-fab');
+  if(fab) fab.style.display = currentStaff.mode === 'orchestrator' ? 'flex' : 'none';
+  const guestRecordsBtn = document.getElementById('guest-records-btn');
+  if(guestRecordsBtn) guestRecordsBtn.style.display = currentStaff.mode === 'orchestrator' ? 'inline-flex' : 'none';
+  // Show/hide orchestrator-only sections
+  const agendaS = document.getElementById('orch-agenda-section');
+  const suggestS = document.getElementById('suggestions-section');
+  if(agendaS) agendaS.style.display = currentStaff.mode === 'orchestrator' ? 'block' : 'none';
+  renderAgenda();
+  renderSuggestions();
+  renderCueStatus();
+
+  autoSkipPast();
+  renderShift();
+  startCountdown();
+  if(autoRead) startAutoCheck();
+}
+
+function endShift(){
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  if(autoCheckInterval){ clearInterval(autoCheckInterval); autoCheckInterval=null; }
+  if(!currentStaff) currentStaff = STAFF_PROFILES.maria;
+  document.getElementById('view-shift').classList.remove('active');
+  document.getElementById('view-home').classList.add('active');
+  setStaffChrome();
+  const fab = document.getElementById('orch-fab');
+  if(fab) fab.style.display = currentStaff.mode === 'orchestrator' ? 'flex' : 'none';
+  const guestRecordsBtn = document.getElementById('guest-records-btn');
+  if(guestRecordsBtn) guestRecordsBtn.style.display = 'none';
+  renderCueStatus();
+  renderHome();
+}
+
+function getNextShiftTP(){
+  const now = nowMin();
+  // First preference: undone TPs whose time is still in the future (or within the last 10 min grace window)
+  const upcoming = shiftTPs.find(item => {
+    if(shiftDoneIds.has(item.tp.id)) return false;
+    if(item.tMin === null) return true;   // no parseable time — always eligible
+    if(item.dayStatus === 'future') return true;
+    return item.tMin >= now - 10;         // 10-min grace window for "just now"
+  });
+  if(upcoming) return upcoming;
+  // Fallback: any undone item (all past, e.g. staff started shift late)
+  return shiftTPs.find(item => !shiftDoneIds.has(item.tp.id)) || null;
+}
+
+// Auto-skip touchpoints that are clearly past (more than 30 min ago) and not yet done
+function autoSkipPast(){
+  const now = nowMin();
+  shiftTPs.forEach(item => {
+    if(shiftDoneIds.has(item.tp.id)) return;
+    if(item.dayStatus === 'today' && item.tMin !== null && now - item.tMin > 30){
+      shiftDoneIds.add(item.tp.id);
+    }
+  });
+}
+
+function startCountdown(){
+  if(countdownInterval) clearInterval(countdownInterval);
+  tickCountdown();
+  countdownInterval = setInterval(tickCountdown, 10000);
+}
+
+function tickCountdown(){
+  autoSkipPast();
+  const next = getNextShiftTP();
+  const banner = document.getElementById('countdown-banner');
+  if(!banner) return;
+  if(!next){
+    banner.innerHTML = '<div style="font-family:\'Cormorant Garamond\',serif;font-size:18px;font-weight:300;color:var(--sl);padding:6px 0;">All touchpoints complete for this shift.</div>';
+    return;
+  }
+  const guestEl   = document.getElementById('cb-guest');
+  const txtEl     = document.getElementById('cb-txt');
+  const actionEl  = document.getElementById('cb-action');
+  const timerEl   = document.getElementById('cb-timer');
+  const timerLbl  = document.getElementById('cb-timer-label');
+  // If any core element is missing the banner was replaced — rebuild it
+  if(!guestEl || !txtEl || !actionEl || !timerEl){
+    banner.innerHTML = `
+      <div class="cb-label">Next Touchpoint</div>
+      <div class="cb-guest" id="cb-guest"></div>
+      <div class="cb-txt" id="cb-txt"></div>
+      <div class="cb-action" id="cb-action"></div>
+      <div class="cb-bottom">
+        <div>
+          <div class="cb-timer" id="cb-timer">--:--</div>
+          <div class="cb-timer-label" id="cb-timer-label">until touchpoint</div>
+        </div>
+        <button class="cb-speak-btn" id="cb-speak-btn" onclick="speakNext()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zm-1 13.93A7 7 0 0 1 5 8H3a9 9 0 0 0 8 8.94V20H8v2h8v-2h-3v-3.07A9 9 0 0 0 21 8h-2a7 7 0 0 1-7 6.93z"/></svg>
+          Read Now
+        </button>
+      </div>
+      <div class="cb-auto-row">
+        <div class="cb-auto-lbl">Auto-read when touchpoint arrives</div>
+        <label class="toggle"><input type="checkbox" id="auto-toggle" onchange="toggleAuto()"><div class="toggle-track"></div></label>
+      </div>
+      <div id="shift-wf" style="margin-top:8px;justify-content:flex-start;display:none;">
+        <div class="wf" id="shift-waveform">${Array(9).fill('<div class="wb"></div>').join('')}</div>
+        <span style="font-size:10px;color:var(--cd);margin-left:10px;" id="shift-speak-status"></span>
+      </div>`;
+    tickCountdown(); // retry now elements exist
+    return;
+  }
+  guestEl.textContent  = next.guest.name;
+  txtEl.textContent    = next.tp.text;
+  actionEl.textContent = next.tp.action || '';
+  if(next.tMin !== null){
+    const diff = minsUntil(next.tMin);
+    if(diff <= 0 && diff > -10){
+      timerEl.textContent = 'Now';
+      timerEl.classList.add('urgent');
+      if(timerLbl) timerLbl.textContent = 'happening now';
+    } else if(diff > 0 && diff < 60){
+      timerEl.textContent = diff + 'm';
+      timerEl.classList.toggle('urgent', diff <= 15);
+      if(timerLbl) timerLbl.textContent = 'until touchpoint';
+    } else if(diff >= 60){
+      const h = Math.floor(diff/60), m = diff%60;
+      timerEl.textContent = h + 'h' + (m ? ' ' + m + 'm' : '');
+      timerEl.classList.remove('urgent');
+      if(timerLbl) timerLbl.textContent = 'until touchpoint';
+    } else {
+      timerEl.textContent = next.tp.time || '–';
+      timerEl.classList.remove('urgent');
+      if(timerLbl) timerLbl.textContent = 'scheduled time';
+    }
+  } else {
+    timerEl.textContent = next.tp.time || '–';
+    timerEl.classList.remove('urgent');
+    if(timerLbl) timerLbl.textContent = 'scheduled time';
+  }
+  renderShift();
+}
+
+function rebuildShiftTPs(){
+  // Always rebuild from live guest data so orchestrated changes appear immediately
+  shiftTPs = [];
+  GUESTS.forEach(guest => {
+    const cv = guest.visits.find(v=>v.status==='current');
+    if(!cv) return;
+    cv.days.forEach((dayObj, dayIndex) => {
+      if(dayObj.status==='past') return;
+      dayObj.touchpoints.forEach(tp => {
+        if(tp.type==='predicted' && tp.source===selectedRole){
+          shiftTPs.push({tp, guest, dayLabel:dayObj.label, dayStatus:dayObj.status, dayIndex, tMin:parseTimeMin(tp.time)});
+        }
+      });
+    });
+  });
+  shiftTPs.sort((a,b)=>(a.dayIndex-b.dayIndex)||((a.tMin??9999)-(b.tMin??9999)));
+}
+
+function renderShift(){
+  rebuildShiftTPs();  // always reflect latest data including orchestrated additions
+  autoSkipPast();
+  const listEl = document.getElementById('shift-tp-list');
+  const next = getNextShiftTP();
+  const now = nowMin();
+  listEl.innerHTML = shiftTPs.map(({tp,guest,dayLabel,dayStatus,tMin}) => {
+    const isNext = tp.id===(next && next.tp).id;
+    const isDone = shiftDoneIds.has(tp.id);
+    const isPast = dayStatus === 'today' && tMin !== null && now - tMin > 30 && !isNext;
+    const pm = tp.placemakerRef ? getPMs(guest.city).find(x=>x.name===tp.placemakerRef) : null;
+    return `<div class="stp-card ${isNext?'next':''} ${isDone||isPast?'done':''}" id="stp-${tp.id}" onclick="openShiftTP('${tp.id}')">
+      <div class="stp-head">
+        <div class="stp-guest">${guest.name}</div>
+        <div class="stp-time">${tp.time} · ${dayLabel}</div>
+      </div>
+      <div class="stp-body">
+        <div class="stp-txt">${tp.text}</div>
+        ${tp.action?`<div class="stp-action">${tp.action}</div>`:''}
+        <div class="stp-badges">
+          ${isNext?`<span class="stp-badge sb-pred">Next · ${dayStatus==='future'?dayLabel:(tMin!==null&&minsUntil(tMin)<=0?'Now':tMin!==null&&minsUntil(tMin)<60?minsUntil(tMin)+'m':tp.time)}</span>`:''}
+          ${isDone&&!isPast?`<span class="stp-badge sb-done">Done ✓</span>`:''}
+          ${isPast&&!isDone?`<span class="stp-badge" style="background:var(--f3);color:var(--cd);border:1px solid var(--b1);">Passed</span>`:''}
+          ${pm?`<span class="stp-badge sb-pm">${pm.name}</span>`:''}
+        </div>
+        <div style="display:flex;gap:7px;margin-top:6px;align-items:center;">
+          ${(currentStaff && currentStaff.mode === 'orchestrator')?`<button class="edit-btn" onclick="event.stopPropagation();openShiftTP('${tp.id}')">Edit</button>`:''}
+          ${!isPast?`<button class="done-btn ${isDone?'undo':''}" onclick="event.stopPropagation();toggleDone('${tp.id}')">${isDone?'Mark not done':'Mark done ✓'}</button>`:''}
+          ${(!currentStaff || currentStaff.mode !== 'orchestrator')?`<button onclick="event.stopPropagation();openSuggest('${tp.id}')" style="background:transparent;border:1px solid var(--amber)44;color:var(--al);font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:2px;cursor:pointer;">Cue Maria</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('') || (currentStaff && currentStaff.mode === 'orchestrator'
+    ? '<div style="padding:20px;font-size:12px;color:var(--cd);">No touchpoints for your role today.</div>'
+    : '<div style="padding:20px;font-size:12px;color:var(--cd);">No touchpoints for your role right now.</div><div style="padding:0 20px 20px;"><button class="tb-btn outline" onclick="openGeneralSuggest()">Cue Maria</button></div>');
+}
+
+function markDone(tpId){
+  shiftDoneIds.add(tpId);
+  if(currentStaff) shiftDoneByStaff[currentStaff.id] = shiftDoneIds;
+  renderShift();
+  tickCountdown();
+}
+
+function toggleDone(tpId){
+  if(shiftDoneIds.has(tpId)){
+    shiftDoneIds.delete(tpId);
+  } else {
+    shiftDoneIds.add(tpId);
+  }
+  if(currentStaff) shiftDoneByStaff[currentStaff.id] = shiftDoneIds;
+  renderShift();
+  tickCountdown();
+}
+
+function openShiftTP(tpId){
+  const item = shiftTPs.find(x=>x.tp.id===tpId);
+  if(!item) return;
+  openTpSheet(item.tp, item.guest);
+}
+
+// ═══ AUTO-READ ════════════════════════════════════════════════════════════════
+function toggleAuto(){
+  autoRead = document.getElementById('auto-toggle').checked;
+  if(autoRead){
+    startAutoCheck();
+    if('Notification' in window && Notification.requestPermission) Notification.requestPermission();
+  } else {
+    if(autoCheckInterval){ clearInterval(autoCheckInterval); autoCheckInterval=null; }
+  }
+}
+
+function startAutoCheck(){
+  if(autoCheckInterval) clearInterval(autoCheckInterval);
+  autoCheckInterval = setInterval(checkAutoFire, 30000);
+}
+
+let lastAutoFiredId = null;
+function checkAutoFire(){
+  if(!autoRead) return;
+  const next = getNextShiftTP();
+  if(!next || next.tp.id===lastAutoFiredId) return;
+  if(next.tMin===null) return;
+  const diff = minsUntil(next.tMin);
+  if(diff>=0 && diff<=2){
+    lastAutoFiredId = next.tp.id;
+    speakTPData(next.tp, next.guest);
+    // Browser notification as fallback
+    if('Notification' in window && Notification.permission==='granted'){
+      new Notification(`Touchpoint: ${next.guest.name}`, {body: next.tp.action||next.tp.text, silent:true});
+    }
+  }
+}
+
+function speakNext(){
+  // Check for pending pings for this role first — they play before the next touchpoint
+  const queuedPings = pendingPings[selectedRole] || [];
+  if(queuedPings.length){
+    const key = elKey();
+    const wfEl = document.getElementById('shift-waveform');
+    const statusEl = document.getElementById('shift-speak-status');
+    const wfContainer = document.getElementById('shift-wf');
+    if(key){
+      const ping = consumePingForRole(selectedRole);
+      // Speak ping directly without a tp object
+      const fakeTP = {text: ping.text, anecdote:null, action:null};
+      const fakeGuest = {name: ping.guestName};
+      speakTPData(fakeTP, fakeGuest, wfEl, statusEl, wfContainer);
+      return;
+    } else if(statusEl){
+      statusEl.textContent = 'Ping queued. Add an ElevenLabs key in Keys to read it aloud.';
+      if(wfContainer) wfContainer.classList.add('show');
+      return;
+    }
+  }
+  const next = getNextShiftTP();
+  if(!next) return;
+  speakTPData(next.tp, next.guest, document.getElementById('shift-waveform'), document.getElementById('shift-speak-status'), document.getElementById('shift-wf'));
+}
+
+// ═══ TP DETAIL SHEET ═════════════════════════════════════════════════════════
+function openTpSheet(tp, guest){
+  selectedTP = tp;
+  selectedTPGuest = guest;
+  document.querySelectorAll('.stp-card').forEach(el=>el.classList.remove('next'));
+  const srcColors={Concierge:'var(--sl)',Spa:'#5a9a9a',Restaurant:'var(--al)',Housekeeping:'var(--rl)',Valet:'var(--vil)',Agent:'var(--gl)'};
+  const srcEl=document.getElementById('sh-src');
+  srcEl.textContent=tp.source; srcEl.style.color=srcColors[tp.source]||'var(--cm)';
+  document.getElementById('sh-time').textContent=tp.time+(tp.type==='predicted'?' · Predicted':'');
+  document.getElementById('sh-guest').textContent=(guest && guest.name)||'';
+  document.getElementById('sh-txt').textContent=tp.text;
+  const anecEl=document.getElementById('sh-anec');
+  if(tp.anecdote){anecEl.textContent='"'+tp.anecdote+'"';anecEl.style.display='block';}else anecEl.style.display='none';
+  const predEl=document.getElementById('sh-pred');
+  if(tp.prediction){predEl.textContent=tp.prediction;predEl.style.display='block';}else predEl.style.display='none';
+  const actEl=document.getElementById('sh-action');
+  if(tp.action){actEl.textContent=tp.action;actEl.style.display='block';}else actEl.style.display='none';
+  const city=(guest && guest.city)||'Menlo Park';
+  const pm=tp.placemakerRef?getPMs(city).find(x=>x.name===tp.placemakerRef):null;
+  const pmEl=document.getElementById('sh-pm');
+  if(pm){pmEl.textContent=`PlaceMaker: ${pm.name} — ${pm.tip}`;pmEl.style.display='block';}else pmEl.style.display='none';
+  const trainEl=document.getElementById('sh-train');
+  if(tp.trainingCtx){document.getElementById('sh-train-txt').textContent=tp.trainingCtx;trainEl.style.display='block';}else trainEl.style.display='none';
+  document.getElementById('sh-note').value=tp.note||'';
+  const canDirectEdit = currentStaff && currentStaff.mode === 'orchestrator';
+  const editPanel = document.getElementById('hc-edit-panel');
+  if(editPanel){
+    editPanel.style.display = canDirectEdit ? 'block' : 'none';
+    document.getElementById('hc-edit-time').value = tp.time || '';
+    document.getElementById('hc-edit-text').value = tp.text || '';
+    document.getElementById('hc-edit-action').value = tp.action || '';
+    document.getElementById('hc-edit-pred').value = tp.prediction || '';
+  }
+  const saveBtn = document.getElementById('sh-save-btn');
+  if(saveBtn) saveBtn.textContent = canDirectEdit ? 'Save Changes' : 'Save Note';
+  document.getElementById('speak-status').textContent='';
+  document.getElementById('wf-center').classList.remove('show');
+  document.getElementById('sh-wf').classList.remove('paused');
+  document.getElementById('tp-ov').classList.add('show');
+}
+function closeTpSheet(evt){
+  if(evt&&evt.target!==document.getElementById('tp-ov'))return;
+  document.getElementById('tp-ov').classList.remove('show');
+  selectedTP=null; selectedTPGuest=null;
+}
+function saveTpNote(){
+  if(!selectedTP)return;
+  if(currentStaff && currentStaff.mode === 'orchestrator'){
+    selectedTP.time = document.getElementById('hc-edit-time').value.trim() || selectedTP.time;
+    selectedTP.text = document.getElementById('hc-edit-text').value.trim() || selectedTP.text;
+    const action = document.getElementById('hc-edit-action').value.trim();
+    const prediction = document.getElementById('hc-edit-pred').value.trim();
+    selectedTP.action = action || null;
+    selectedTP.prediction = prediction || null;
+    selectedTP.evolved = true;
+  }
+  selectedTP.note=document.getElementById('sh-note').value.trim()||null;
+  document.getElementById('tp-ov').classList.remove('show');
+  renderShift();
+  renderHome();
+  tickCountdown();
+}
+
+// ═══ SPEAK ════════════════════════════════════════════════════════════════════
+async function speakTP(){
+  if(!selectedTP||!selectedTPGuest) return;
+  await speakTPData(selectedTP, selectedTPGuest,
+    document.getElementById('sh-wf'),
+    document.getElementById('speak-status'),
+    document.getElementById('wf-center'));
+}
+
+async function speakTPData(tp, guest, wfEl, statusEl, wfContainer){
+  const text = [
+    (guest && guest.name) ? `For ${guest.name}:` : '',
+    tp.text,
+    tp.anecdote ? tp.anecdote : '',
+    tp.action || ''
+  ].filter(Boolean).join(' ');
+  if(statusEl) statusEl.textContent='Generating…';
+  if(currentAudio){ currentAudio.pause(); currentAudio=null; }
+  if(wfEl) wfEl.classList.remove('paused');
+  if(wfContainer) wfContainer.classList.add('show');
+  try{
+    const blob=await getVoiceBlob(text, statusEl);
+    const url=URL.createObjectURL(blob);
+    currentAudio=new Audio(url); isPlaying=true;
+    if(statusEl) statusEl.textContent='Playing…';
+    currentAudio.play();
+    currentAudio.onended=()=>{ isPlaying=false; if(wfEl)wfEl.classList.add('paused'); if(statusEl)statusEl.textContent='Done.'; };
+  }catch(e){ if(statusEl)statusEl.textContent=e.message; if(wfContainer)wfContainer.classList.remove('show'); }
+}
+
+// ═══ ORCHESTRATOR ═════════════════════════════════════════════════════════════
+let orchSelectedGuestId = null;
+let orchLastGuestId = null;
+
+function activeGuests(){
+  return GUESTS.filter(g=>g.visits.some(v=>v.status==='current'));
+}
+
+function guestNameById(id){
+  const guest = GUESTS.find(g=>g.id===id);
+  return guest ? guest.name : '';
+}
+
+function updateOrchTargetUI(){
+  const active = activeGuests();
+  const status = document.getElementById('orch-target-status');
+  const ambiguous = document.getElementById('orch-ambiguous');
+  document.querySelectorAll('.orch-guest-chip').forEach(chip=>{
+    chip.classList.toggle('selected', chip.dataset.guestId === String(orchSelectedGuestId));
+  });
+  if(!status || !ambiguous) return;
+  if(orchSelectedGuestId === 'ALL'){
+    status.textContent = 'Applying to: all active guests';
+    ambiguous.style.display = 'none';
+  } else if(orchSelectedGuestId){
+    status.textContent = 'Applying to: ' + guestNameById(orchSelectedGuestId);
+    ambiguous.style.display = 'none';
+  } else {
+    status.textContent = active.length > 1 ? 'Choose a guest, or type their name in the instruction.' : '';
+    ambiguous.style.display = active.length > 1 ? 'block' : 'none';
+  }
+}
+
+function openOrch(){
+  // In shift view, only the Head Concierge can orchestrate
+  const inShift = document.getElementById('view-shift').classList.contains('active');
+  if(inShift && (!currentStaff || currentStaff.mode !== 'orchestrator')){
+    alert('The Orchestrate tool is available to the Head Concierge only. Other roles can log touchpoints and mark tasks done.');
+    return;
+  }
+
+  document.getElementById('orch-ov').classList.add('show');
+  document.getElementById('diff-wrap').classList.remove('show');
+  document.getElementById('orch-ambiguous').style.display='none';
+
+  // Build guest chips
+  const active = activeGuests();
+  const chips = document.getElementById('orch-guest-chips');
+  chips.innerHTML = '';
+
+  if(active.length===1){
+    orchSelectedGuestId = active[0].id;
+  } else if(homeGuestFilter !== 'All' && active.some(g=>g.id===homeGuestFilter)){
+    orchSelectedGuestId = homeGuestFilter;
+  } else if(orchLastGuestId && active.some(g=>g.id===orchLastGuestId)){
+    orchSelectedGuestId = orchLastGuestId;
+  } else if(orchSelectedGuestId !== 'ALL' && !active.some(g=>g.id===orchSelectedGuestId)){
+    orchSelectedGuestId = null;
+  }
+
+  active.forEach(g=>{
+    const chip = document.createElement('button');
+    chip.className = 'orch-guest-chip' + (g.id===orchSelectedGuestId?' selected':'');
+    chip.dataset.guestId = g.id;
+    chip.textContent = g.name.split(' ').slice(-1)[0]; // last name only
+    chip.onclick = ()=>{
+      orchSelectedGuestId = g.id;
+      orchLastGuestId = g.id;
+      updateOrchTargetUI();
+    };
+    chips.appendChild(chip);
+  });
+
+  if(active.length>1){
+    const allChip = document.createElement('button');
+    allChip.className = 'orch-guest-chip all-chip';
+    allChip.dataset.guestId = 'ALL';
+    allChip.textContent = 'All guests';
+    allChip.title = 'Only for mood/service changes that apply property-wide';
+    allChip.onclick = ()=>{
+      orchSelectedGuestId = 'ALL';
+      updateOrchTargetUI();
+    };
+    chips.appendChild(allChip);
+  }
+  updateOrchTargetUI();
+}
+function closeOrch(evt){ if(evt&&evt.target!==document.getElementById('orch-ov'))return; document.getElementById('orch-ov').classList.remove('show'); }
+
+// ── LOCAL DIFF ENGINE ─────────────────────────────────────────────────────────
+// Runs entirely in the browser. No API key required.
+// Classifies intent from natural language, then generates precise diffs
+// by mutating the actual touchpoint objects in memory.
+
+function classifyIntent(txt){
+  const t = txt.toLowerCase();
+  // Returns array of matched intents, each with extracted params
+  const intents = [];
+
+  // MOOD / STATE SHIFTS
+  if(/lighter|turned|opened up|settled|emerged|relaxed|smiling|good mood|happier/.test(t))
+    intents.push({type:'mood_positive', raw:txt});
+  if(/difficult|tense|withdrawn|tired|upset|difficult night|argument|stressed|not well/.test(t))
+    intents.push({type:'mood_negative', raw:txt});
+
+  // TIME SHIFTS — extract target time
+  const timeMatch = t.match(/(?:move|shift|change|push|set)[^.]*?(?:to|at)\s+(\d{1,2}(?::\d{2})?(?:\s*(?:am|pm))?)/i)
+                 || t.match(/(\d{1,2}:\d{2})/);
+  if(timeMatch && /dinner|lunch|breakfast|spa|service|reservation|time/.test(t))
+    intents.push({type:'time_shift', target: timeMatch[1], raw:txt,
+      role: /dinner/.test(t)?'Restaurant':/lunch|breakfast/.test(t)?'Restaurant':/spa/.test(t)?'Spa':'Concierge'});
+
+  // SERVICE LEVEL
+  if(/invisible|leave alone|no contact|do not disturb|step back|back off/.test(t))
+    intents.push({type:'reduce_service', raw:txt});
+  if(/more attention|proactive|engage|full service|check in on/.test(t))
+    intents.push({type:'increase_service', raw:txt});
+
+  // SPECIFIC ROLE INSTRUCTIONS
+  if(/spa/.test(t) && /cancel|remove|no spa|skip spa|not interested/.test(t))
+    intents.push({type:'cancel_role', role:'Spa', raw:txt});
+  if(/restaurant|dinner|dining/.test(t) && /cancel|remove|not coming|skip/.test(t))
+    intents.push({type:'cancel_role', role:'Restaurant', raw:txt});
+
+  // PLACEMAKER INJECT
+  const pmNames = Object.values(PLACEMAKERS).flat().map(p=>p.name.toLowerCase());
+  pmNames.forEach(name => {
+    if(t.includes(name.toLowerCase().substring(0,8))){
+      const pm = Object.values(PLACEMAKERS).flat().find(p=>p.name.toLowerCase().includes(name.substring(0,8)));
+      if(pm) intents.push({type:'inject_pm', pm, raw:txt});
+    }
+  });
+
+  // VALET / CAR INSTRUCTIONS
+  if(/car|vehicle|valet|driver|transfer|pickup|pick.?up|drop.?off|chauffeur|bring.?around|pull.?around/.test(t))
+    intents.push({type:'valet_instruction', raw:txt});
+
+  // DIETARY / SPECIAL REQUEST
+  if(/allerg|dietary|vegetarian|vegan|gluten|shellfish|nut|kosher|halal|no meat|prefer/.test(t) && /food|eat|meal|dinner|lunch|menu|drink/.test(t))
+    intents.push({type:'dietary_note', raw:txt});
+
+  // ROOM / HOUSEKEEPING
+  if(/room|suite|housekeeping|clean|pillow|temperature|amenity|minibar|flowers|towel/.test(t))
+    intents.push({type:'room_note', raw:txt});
+
+  // DAY-SPECIFIC
+  const dayMatch = t.match(/day\s+(\d)/i);
+  if(dayMatch) intents.forEach(i => i.day = parseInt(dayMatch[1]));
+
+  // GUEST-SPECIFIC
+  GUESTS.forEach(g=>{
+    const lastName = g.name.split(' ').pop().toLowerCase();
+    const firstName = (g.name.split(" ").length > 1 ? g.name.split(" ")[1].toLowerCase() : "");
+    if(t.includes(lastName)||t.includes(firstName||'')) intents.forEach(i=>i.guestId=g.id);
+  });
+
+  // If nothing matched, create a freeform note intent
+  if(!intents.length) intents.push({type:'freeform', raw:txt});
+
+  return intents;
+}
+
+// Intents that are always guest-specific (not property-wide)
+const GUEST_SPECIFIC_INTENTS = new Set(['valet_instruction','dietary_note','room_note','freeform','time_shift','cancel_role','inject_pm']);
+
+function applyIntent(intent, changes){
+  let targetGuests;
+
+  if(intent.applyAll){
+    targetGuests = activeGuests();
+  } else if(intent.guestId){
+    // Explicitly named guest
+    targetGuests = GUESTS.filter(g=>g.id===intent.guestId);
+  } else if(GUEST_SPECIFIC_INTENTS.has(intent.type)){
+    const active = activeGuests();
+    targetGuests = active.length===1 ? active : [];
+    if(active.length>1) intent._requiresTarget = true;
+  } else {
+    // Property-wide intents (mood, service level) apply to all active guests
+    targetGuests = activeGuests();
+  }
+
+  targetGuests.forEach(guest => {
+    const cv = guest.visits.find(v=>v.status==='current'); if(!cv) return;
+
+    // For intents that should only fire once per guest, track whether we already fired
+    let valetFired = false;
+    let dietaryFired = false;
+    let roomFired = false;
+    let freeformFired = false;
+
+    cv.days.forEach(dayObj => {
+      if(dayObj.status==='past') return;
+      if(intent.day && !dayObj.label.includes('Day '+intent.day)) return;
+
+      dayObj.touchpoints.forEach(tp => {
+        if(tp.type!=='predicted') return;
+        if(intent.role && tp.source!==intent.role) return;
+
+        const scope = `${guest.name} · ${dayObj.label} · ${tp.time}`;
+
+        if(intent.type==='mood_positive'){
+          // Positive mood: open up engagement sooner, soften caution language
+          if(tp.action && (tp.action.includes('only if')||tp.action.includes('never')||tp.action.includes('wait')||tp.action.includes('do not'))){
+            const oldAction = tp.action;
+            const newAction = tp.action
+              .replace('only if she initiates', 'she may welcome a gentle offer now')
+              .replace('only if he asks', 'he may welcome a gentle suggestion')
+              .replace('Never pre-empt', 'Timing is good — you may gently offer')
+              .replace('Wait', 'Guest is in a positive state — proceed with care');
+            if(oldAction!==newAction)
+              changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Guest mood has shifted positively — engage earlier than originally planned.'});
+          }
+          if(tp.prediction && tp.prediction.includes('do not')){
+            const oldPred = tp.prediction;
+            const newPred = tp.prediction.replace('do not','may now');
+            changes.push({role:tp.source, scope, old:oldPred, new:newPred, reason:'Positive mood signal — update predicted behaviour.'});
+          }
+        }
+
+        if(intent.type==='mood_negative'){
+          // Negative mood: pull back all proactive actions
+          if(tp.action && !tp.action.includes('No action')){
+            const oldAction = tp.action;
+            const newAction = '→ Hold. Guest is having a difficult time — no proactive contact. Be available only if approached.';
+            changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Guest is experiencing difficulty — reduce all proactive engagement.'});
+          }
+        }
+
+        if(intent.type==='time_shift'){
+          const raw24 = normaliseTime(intent.target);
+          if(tp.time && tp.time !== raw24){
+            const oldTime = tp.time;
+            changes.push({role:tp.source, scope, old:oldTime, new:raw24, field:'time', tpId:tp.id, reason:`Scheduled time updated to ${raw24} per staff instruction.`});
+          }
+          if(tp.action && /\d{1,2}:\d{2}/.test(tp.action)){
+            const oldAction = tp.action;
+            const newAction = tp.action.replace(/\d{1,2}:\d{2}(?:\s*(?:am|pm))?/gi, raw24);
+            if(oldAction!==newAction)
+              changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:`Time preference updated to ${raw24} per staff observation.`});
+          }
+          if(tp.text && /\d{1,2}:\d{2}/.test(tp.text)){
+            const oldText = tp.text;
+            const newText = tp.text.replace(/\d{1,2}:\d{2}(?:\s*(?:am|pm))?/gi, raw24);
+            if(oldText!==newText)
+              changes.push({role:tp.source, scope, old:oldText, new:newText, reason:`Predicted time updated to ${raw24}.`});
+          }
+        }
+
+        if(intent.type==='reduce_service'){
+          if(tp.action && !tp.action.toLowerCase().includes('no action') && !tp.action.toLowerCase().includes('do not contact')){
+            const oldAction = tp.action;
+            const newAction = '→ No proactive contact. Available only if guest initiates.';
+            changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Guest preference for reduced contact — step back from all proactive touchpoints.'});
+          }
+        }
+
+        if(intent.type==='increase_service'){
+          if(tp.action && (tp.action.includes('only if')||tp.action.includes('wait')||tp.action.includes('No action'))){
+            const oldAction = tp.action;
+            const newAction = tp.action
+              .replace('only if she initiates','proactively, with a warm gentle offer')
+              .replace('only if he asks','proactively, with a single warm suggestion')
+              .replace('No action required','Check in briefly — guest welcomes attention')
+              .replace('Available only if','Proactively available —');
+            if(oldAction!==newAction)
+              changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Guest welcomes increased engagement.'});
+          }
+        }
+
+        if(intent.type==='cancel_role' && tp.source===intent.role){
+          if(tp.action){
+            const oldAction = tp.action;
+            changes.push({role:tp.source, scope, old:oldAction, new:'→ Cancel / stand down. Guest has indicated this is not needed.', reason:`${intent.role} touchpoint removed per staff instruction.`});
+          }
+        }
+
+        if(intent.type==='inject_pm' && tp.source==='Concierge'){
+          const pm = intent.pm;
+          const oldAction = tp.action||tp.text;
+          const newAction = (tp.action||tp.text) + ` Consider referencing ${pm.name} (${pm.tip}).`;
+          if(!(oldAction && oldAction.includes(pm.name)))
+            changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:`PlaceMaker ${pm.name} added as a relevant local recommendation.`});
+        }
+
+        if(intent.type==='valet_instruction' && !valetFired){
+          if(tp.source==='Valet'){
+            const oldAction = tp.action || tp.text;
+            const cleaned = intent.raw
+              .replace(/^(can you please|can you|please|ensure that|make sure that|make sure|ensure)\s+/i, '')
+              .replace(/^./, c => c.toUpperCase());
+            const newAction = `→ ${cleaned}. Confirm with head valet.`;
+            changes.push({role:'Valet', scope, old:oldAction, new:newAction, reason:'Valet / vehicle instruction from orchestrator.'});
+            valetFired = true;
+            return;
+          }
+        }
+
+        if(intent.type==='dietary_note' && !dietaryFired && tp.source==='Restaurant'){
+          const oldAction = tp.action || tp.text;
+          const newAction = (tp.action||tp.text).replace(/\s*\[(?:Staff\s+)?Note:.*?\]/gi,'') + ` [Note: ${intent.raw}]`;
+          if(!oldAction.includes(intent.raw.substring(0,15))){
+            changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Dietary or food preference noted.'});
+            dietaryFired = true;
+          }
+          return;
+        }
+
+        if(intent.type==='room_note' && !roomFired && tp.source==='Housekeeping'){
+          const oldAction = tp.action || tp.text;
+          const newAction = (tp.action||tp.text).replace(/\s*\[(?:Staff\s+)?Note:.*?\]/gi,'') + ` [Note: ${intent.raw}]`;
+          if(!oldAction.includes(intent.raw.substring(0,15))){
+            changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Room or housekeeping instruction noted.'});
+            roomFired = true;
+          }
+          return;
+        }
+
+        if(intent.type==='freeform' && !freeformFired && tp.source==='Concierge'){
+          const oldAction = tp.action || tp.text;
+          const note = intent.raw.charAt(0).toUpperCase() + intent.raw.slice(1);
+          const newAction = (tp.action||tp.text).replace(/\s*\[(?:Staff\s+)?Note:.*?\]/gi,'') + ` [Staff note: ${note}]`;
+          if(!oldAction.includes(note.substring(0,15))){
+            changes.push({role:tp.source, scope, old:oldAction, new:newAction, reason:'Staff note attached to next concierge touchpoint.'});
+            freeformFired = true;
+          }
+          return;
+        }
+      });
+    });
+
+    // If valet instruction fired but found no matching TP, inject a new one on the first upcoming day
+    if(intent.type==='valet_instruction' && !valetFired){
+      const targetDay = cv.days.find(d=>d.status==='today'||d.status==='future');
+      if(targetDay){
+        const cleaned = intent.raw
+          .replace(/^(can you please|can you|please|ensure that|make sure that|make sure|ensure)\s+/i,'')
+          .replace(/^./, c=>c.toUpperCase());
+        const newTP = {
+          id: uid(), type:'predicted', time:'On call',
+          source:'Valet', sourceClass:'s-valet',
+          text:'Valet instruction pending.',
+          prediction:null,
+          action:`→ ${cleaned}. Confirm with head valet.`,
+          note:null, tags:['valet','orchestrated'], trainingCtx:null, placemakerRef:null, evolved:true
+        };
+        const scope = `${guest.name} · ${targetDay.label} · On call`;
+        changes.push({role:'Valet', scope, old:null, new:newTP.action, kind:'new_touchpoint', guestId:guest.id, dayIndex:cv.days.indexOf(targetDay), touchpoint:newTP, reason:'New valet touchpoint created from orchestrator instruction.'});
+        valetFired = true;
+      }
+    }
+
+  });
+}
+
+function normaliseTime(str){
+  // Converts "8pm", "20:30", "8:30pm" → "20:30" style
+  const m = str.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if(!m) return str;
+  let h = parseInt(m[1]), min = parseInt(m[2]||'0');
+  const period = (m[3]||'').toLowerCase();
+  if(period==='pm'&&h<12) h+=12;
+  if(period==='am'&&h===12) h=0;
+  return String(h).padStart(2,'0')+':'+String(min).padStart(2,'0');
+}
+
+function buildSummary(intents, changes){
+  if(!changes.length) return 'No matching predicted touchpoints found for this instruction.';
+  const typeLabels = {
+    mood_positive:'Positive mood shift detected — proactive engagement windows opened.',
+    mood_negative:'Guest experiencing difficulty — proactive contact reduced across touchpoints.',
+    time_shift:'Time preference updated across relevant touchpoints.',
+    reduce_service:'Service level reduced — standing back from proactive contact.',
+    increase_service:'Service level increased — proactive engagement enabled.',
+    cancel_role:'Touchpoints for the specified role cancelled.',
+    inject_pm:'PlaceMaker recommendation added to upcoming concierge touchpoint.',
+    valet_instruction:'Vehicle or valet instruction applied to upcoming touchpoints.',
+    dietary_note:'Dietary or food preference noted on restaurant touchpoints.',
+    room_note:'Room or housekeeping instruction applied.',
+    freeform:'Staff note attached to next upcoming concierge touchpoint.',
+  };
+  const primary = intents[0];
+  return (primary ? typeLabels[primary.type] : undefined) || `${changes.length} change${changes.length!==1?'s':''} generated from staff instruction.`;
+}
+
+function runOrch(){
+  const inp = document.getElementById('orch-inp').value.trim();
+  if(!inp) return;
+  const btn = document.getElementById('orch-run');
+  const ld  = document.getElementById('orch-ld');
+  btn.disabled = true;
+  ld.classList.add('show');
+  document.getElementById('diff-wrap').classList.remove('show');
+
+  // Small artificial delay so it feels like computation is happening
+  setTimeout(() => {
+    const intents = classifyIntent(inp);
+    const hasTypedGuest = intents.some(intent => intent.guestId);
+    const needsGuestTarget = intents.some(intent => GUEST_SPECIFIC_INTENTS.has(intent.type));
+
+    // Apply the UI guest selection to every intent
+    intents.forEach(intent => {
+      if(orchSelectedGuestId && orchSelectedGuestId !== 'ALL'){
+        intent.guestId = orchSelectedGuestId;
+      } else if(orchSelectedGuestId === 'ALL'){
+        intent.applyAll = true;
+        delete intent.guestId;
+      }
+      // If nothing selected, classifyIntent may have detected a name — keep it
+    });
+
+    if(needsGuestTarget && !orchSelectedGuestId && !hasTypedGuest){
+      pendingDiff = null;
+      document.getElementById('diff-summary').textContent = 'Choose a guest first, or type the guest name in your instruction.';
+      document.getElementById('diff-count').textContent = 'No changes generated yet.';
+      document.getElementById('diff-cards').innerHTML = '';
+      document.getElementById('diff-wrap').classList.add('show');
+      updateOrchTargetUI();
+      btn.disabled = false;
+      ld.classList.remove('show');
+      return;
+    }
+
+    const changes = [];
+    intents.forEach(intent => applyIntent(intent, changes));
+
+    // Deduplicate changes by scope+role
+    const seen = new Set();
+    const uniqueChanges = changes.filter(ch => {
+      const key = ch.role + ch.scope + (ch.old||'').substring(0,20);
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    pendingDiff = { summary: buildSummary(intents, uniqueChanges), changes: uniqueChanges };
+
+    document.getElementById('diff-summary').textContent =
+      pendingDiff.summary;
+    const cnt = uniqueChanges.length;
+    document.getElementById('diff-count').textContent = cnt
+      ? cnt + ' change' + (cnt!==1?'s':'') + ' proposed'
+      : 'No changes — try rephrasing or check the instruction matches an active guest.';
+
+    document.getElementById('diff-cards').innerHTML = uniqueChanges.map((ch, idx) => `
+      <div class="diff-card">
+        <div class="diff-card-role">
+          <span class="diff-role-name">${ch.role}</span>
+          <span class="diff-scope">${ch.scope||''}</span>
+        </div>
+        <div class="diff-card-body">
+          ${ch.old
+            ? `<div class="diff-row"><div class="diff-indicator diff-minus">−</div><div class="diff-old-text">${ch.old}</div></div>`
+            : `<div style="font-size:9px;color:var(--predl);margin-bottom:4px;letter-spacing:.06em;">NEW TOUCHPOINT</div>`}
+          <div class="diff-row" style="margin-top:${ch.old?'4px':'0'}">
+            <div class="diff-indicator diff-plus">+</div>
+            <div style="flex:1;">
+              <div class="diff-edit-lbl">Maria can edit before applying</div>
+              <textarea class="diff-edit" data-diff-idx="${idx}" oninput="updatePendingChange(${idx}, this.value)">${ch.new}</textarea>
+            </div>
+          </div>
+          <div class="diff-reason">${ch.reason}</div>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('diff-wrap').classList.add('show');
+    btn.disabled = false;
+    ld.classList.remove('show');
+  }, 400);
+}
+
+function updatePendingChange(idx, value){
+  if(!pendingDiff || !pendingDiff.changes || !pendingDiff.changes[idx]) return;
+  pendingDiff.changes[idx].new = value.trim();
+  if(pendingDiff.changes[idx].kind === 'new_touchpoint' && pendingDiff.changes[idx].touchpoint){
+    pendingDiff.changes[idx].touchpoint.action = value.trim();
+  }
+}
+
+function syncDiffEdits(){
+  if(!pendingDiff || !pendingDiff.changes) return;
+  document.querySelectorAll('.diff-edit').forEach(el=>{
+    const idx = Number(el.getAttribute('data-diff-idx'));
+    if(Number.isNaN(idx) || !pendingDiff.changes[idx]) return;
+    const value = el.value.trim();
+    if(!value) return;
+    pendingDiff.changes[idx].new = value;
+    if(pendingDiff.changes[idx].kind === 'new_touchpoint' && pendingDiff.changes[idx].touchpoint){
+      pendingDiff.changes[idx].touchpoint.action = value;
+    }
+  });
+}
+
+
+function approveDiff(){
+  if(!pendingDiff) return;
+  syncDiffEdits();
+  (pendingDiff.changes||[]).forEach(ch => {
+    // New touchpoints are held in the pending diff until the user approves.
+    if(!ch.old && ch.kind !== 'new_touchpoint') return;
+    const norm = s => (s||'').replace(/^[\u2192\-\s]+/,'').substring(0,30).toLowerCase().trim();
+    const oldNorm = norm(ch.old);
+    GUESTS.forEach(guest => {
+      const cv = guest.visits.find(v=>v.status==='current'); if(!cv) return;
+      if(ch.kind === 'new_touchpoint'){
+        if(guest.id !== ch.guestId) return;
+        const targetDay = cv.days[ch.dayIndex];
+        if(targetDay && !targetDay.touchpoints.some(tp=>tp.id===ch.touchpoint.id)){
+          targetDay.touchpoints.push(ch.touchpoint);
+        }
+        return;
+      }
+      cv.days.forEach(dayObj => {
+        dayObj.touchpoints.forEach(tp => {
+          if(tp.type !== 'predicted') return;
+          if(ch.field === 'time' && ch.tpId === tp.id){
+            tp.time = ch.new; tp.evolved = true;
+          } else if(oldNorm && norm(tp.action) === oldNorm){
+            tp.action = ch.new; tp.evolved = true;
+          } else if(oldNorm && norm(tp.text) === oldNorm){
+            tp.text = ch.new; tp.evolved = true;
+          }
+        });
+      });
+    });
+  });
+  buildAgendaFromDiff(pendingDiff);
+  if(activeSuggestionId){
+    const s = suggestions.find(x=>x.id===activeSuggestionId);
+    if(s){
+      s.status = 'applied';
+      s.actioned = true;
+    }
+    activeSuggestionId = null;
+    renderSuggestions();
+    renderCueStatus();
+  }
+  pendingDiff = null;
+  document.getElementById('orch-ov').classList.remove('show');
+  document.getElementById('orch-inp').value = '';
+  document.getElementById('diff-wrap').classList.remove('show');
+  if(orchSelectedGuestId && orchSelectedGuestId !== 'ALL') orchLastGuestId = orchSelectedGuestId;
+  renderHome();
+  if(document.getElementById('view-shift').classList.contains('active')) renderShift();
+  const guestOv = document.getElementById('guest-ov');
+  if(guestOv.classList.contains('show') && window._openGuestId){
+    openGuestSheet(window._openGuestId);
+  }
+}
+function rejectDiff(){
+  pendingDiff=null;
+  if(activeSuggestionId){
+    const s = suggestions.find(x=>x.id===activeSuggestionId);
+    if(s) s.status = 'pending';
+  }
+  activeSuggestionId=null;
+  renderSuggestions();
+  renderCueStatus();
+  document.getElementById('diff-wrap').classList.remove('show');
+  document.getElementById('orch-inp').value='';
+}
+
+// ═══ NEW GUEST ════════════════════════════════════════════════════════════════
+function openNG(){ document.getElementById('ng-overlay').classList.add('show'); }
+function closeNG(){ document.getElementById('ng-overlay').classList.remove('show'); }
+
+async function createGuest(){
+  const name    = document.getElementById('ng-name').value.trim();
+  const tier    = document.getElementById('ng-tier').value;
+  const prop    = document.getElementById('ng-prop').value.trim();
+  const city    = document.getElementById('ng-city').value.trim();
+  const purp    = document.getElementById('ng-purp').value;
+  const inDate  = document.getElementById('ng-in').value.trim();
+  const outDate = document.getElementById('ng-out').value.trim();
+  const party   = document.getElementById('ng-party').value;
+  const svc     = document.getElementById('ng-svc').value;
+  const sleep   = document.getElementById('ng-sleep').value;
+  const diet    = document.getElementById('ng-diet').value.trim();
+  const room    = document.getElementById('ng-room').value.trim();
+  const prior   = document.getElementById('ng-prior').value.trim();
+  const agent   = document.getElementById('ng-agent').value.trim();
+  const obs     = document.getElementById('ng-obs').value.trim();
+  if(!name||!purp){ alert('Name and purpose are required.'); return; }
+  const btn=document.getElementById('ng-create'); const ld=document.getElementById('ng-ld');
+  btn.disabled=true; ld.classList.add('show');
+  const numDays=dayCount(inDate,outDate);
+  const days=[];
+  for(let i=0;i<numDays;i++){
+    const date=i===0?inDate:shiftDate(inDate,i);
+    const isLast=i===numDays-1;
+    days.push({date,label:isLast?`Day ${i+1} · Checkout`:`Day ${i+1}`,status:i===0?'today':'future',touchpoints:[]});
+  }
+  const pmsForCity=getPMs(city).map(pm=>`${pm.pillar}: ${pm.name} (${pm.tip})`).join(', ');
+  const prompt=`You are The Orchestrator. Generate predicted touchpoints for a new guest.
+
+Guest: ${name}, ${party}, ${tier}. Property: ${prop||'Luxury hotel'}, ${city||'unknown'}.
+Purpose: ${purp}. Dates: ${inDate} — ${outDate} (${numDays} days).
+Structured: sleep=${sleep||'unknown'}, dietary=${diet||'none'}, service=${svc||'unknown'}, room=${room||'unknown'}, prior=${prior||'none'}.
+${agent?`Agent note: ${agent}`:''}${obs?`\nArrival observation: ${obs}`:''}
+Available PlaceMakers: ${pmsForCity||'none known'}
+
+Generate 1-3 predicted touchpoints per day. Use structured preferences as primary signal. Reference PlaceMakers where relevant. Include trainingCtx for new staff.
+
+Respond ONLY in valid JSON:
+{"days":[{"day_index":0,"touchpoints":[{"time":"15:00","source":"Concierge","text":"Expected: ...","prediction":"Based on ...","action":"→ ...","trainingCtx":"The principle is ...","placemakerRef":null}]}]}`;
+  const srcMap={Concierge:'s-concierge',Spa:'s-spa',Restaurant:'s-restaurant',Housekeeping:'s-housekeeping',Valet:'s-valet'};
+  try{
+    const parsed = await generateTouchpointsWithChatGPT(prompt);
+    if(agent||obs){
+      days[0].touchpoints.unshift({id:uid(),type:'past',time:'Arrival',source:agent?'Agent':'Concierge',sourceClass:agent?'s-agent':'s-concierge',text:agent?'Pre-arrival note received.':'Arrival observation.',anecdote:agent||obs||null,note:null,tags:['arrival'],trainingCtx:null,placemakerRef:null,evolved:false});
+    }
+    (parsed.days||[]).forEach(pd=>{
+      const dayObj=days[pd.day_index]; if(!dayObj) return;
+      (pd.touchpoints||[]).forEach(tp=>{
+        dayObj.touchpoints.push({id:uid(),type:'predicted',time:tp.time||'',source:tp.source||'Concierge',sourceClass:srcMap[tp.source]||'s-concierge',text:tp.text||'',prediction:tp.prediction||null,action:tp.action||null,note:null,tags:['predicted'],trainingCtx:tp.trainingCtx||null,placemakerRef:tp.placemakerRef||null,evolved:false});
+      });
+    });
+  }catch(e){ console.error(e); }
+  const guest={id:uid(),name,tier,city:city||'Unknown',property:prop||'Hotel',struct:{sleep,dietary:diet||'None',svc,room,prior},agentNote:agent||'',crossMemory:[],visits:[]};
+  const visit={id:uid(),visitNum:1,property:prop||'Hotel',city:city||'Unknown',checkin:inDate,checkout:outDate,purpose:purp,status:'current',days};
+  guest.visits.push(visit);
+  GUESTS.push(guest);
+  closeNG(); btn.disabled=false; ld.classList.remove('show');
+  renderHome();
+}
+
+// ═══ INIT ══════════════════════════════════════════════════════════════════════
+seed();
+seedDemoSuggestions();
+startClock();
+signOut();
+</script>
+</body>
+</html>
