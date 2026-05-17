@@ -118,6 +118,10 @@ body{min-height:100%;background:var(--f0);color:var(--cream);font-family:'Jost',
 .brief-line strong{color:var(--predl);font-weight:400}
 .brief-line.action strong{color:var(--gold)}
 .brief-line.avoid{color:var(--rl)}
+.brief-filter{display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+.brief-filter-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cd)}
+.brief-select{background:var(--f2);border:1px solid var(--b1);border-radius:3px;color:var(--cream);font-family:'Jost',sans-serif;font-size:13px;padding:8px 10px;outline:none;min-width:220px}
+.brief-select:focus{border-color:var(--gold)}
 .brief-actions{display:flex;align-items:center;gap:8px;margin-top:10px}
 .brief-actions .ld{display:none;align-items:center;gap:6px;font-size:10px;color:var(--cd)}
 .brief-status{font-size:12px;color:var(--cd);line-height:1.4}
@@ -502,9 +506,16 @@ button{min-height:34px}
       </div>
       <button class="brief-close" onclick="document.getElementById('speed-panel').style.display='none'">×</button>
     </div>
+    <div class="brief-filter">
+      <span class="brief-filter-label">Guest</span>
+      <select class="brief-select" id="brief-guest-select" onchange="bringUpToSpeed(this.value)">
+        <option value="all">All active guests</option>
+      </select>
+    </div>
     <div id="speed-content" class="brief-content"></div>
     <div class="brief-actions">
       <button class="tb-btn" id="speed-speak-btn" onclick="speakBriefing()">Quick voice brief</button>
+      <button class="tb-btn outline" id="speed-pause-btn" onclick="toggleBriefingPause()" style="display:none;">Pause</button>
       <div class="ld" id="speed-ld"><div class="spin"></div></div>
       <div class="brief-status" id="speed-status"></div>
     </div>
@@ -1653,6 +1664,7 @@ function sendSuggestion(){
 // ═══ BRING UP TO SPEED ════════════════════════════════════════════════════════
 let briefingText = '';
 let briefingVoiceText = '';
+let briefingGuestId = 'all';
 const voiceCache = new Map();
 
 function cleanVoiceText(text){
@@ -1663,7 +1675,32 @@ function cleanVoiceText(text){
     .trim();
 }
 
-function bringUpToSpeed(){
+function currentBriefingGuests(){
+  return GUESTS.filter(g=>{
+    const cv = g.visits.find(v=>v.status==='current');
+    if(!cv) return false;
+    if(briefingGuestId !== 'all' && g.id !== briefingGuestId) return false;
+    return cv.days.flatMap(d=>d.touchpoints).some(tp=>{
+      if(tp.type !== 'predicted') return false;
+      if(currentStaff && currentStaff.mode === 'orchestrator') return true;
+      return tp.source === selectedRole;
+    }) || (currentStaff && currentStaff.mode === 'orchestrator');
+  });
+}
+
+function syncBriefingGuestSelect(activeGuests){
+  const select = document.getElementById('brief-guest-select');
+  if(!select) return;
+  const validIds = new Set(activeGuests.map(g=>g.id));
+  if(briefingGuestId !== 'all' && !validIds.has(briefingGuestId)) briefingGuestId = 'all';
+  select.innerHTML = '<option value="all">All active guests</option>' + activeGuests.map(g=>
+    `<option value="${g.id}">${g.name}</option>`
+  ).join('');
+  select.value = briefingGuestId;
+}
+
+function bringUpToSpeed(guestId){
+  if(typeof guestId === 'string') briefingGuestId = guestId || 'all';
   const panel = document.getElementById('speed-panel');
   const content = document.getElementById('speed-content');
   const ld = document.getElementById('speed-ld');
@@ -1675,7 +1712,9 @@ function bringUpToSpeed(){
 
   // Build briefing from live data -- no API needed
   const lines = [];
-  const activeGuests = GUESTS.filter(g=>g.visits.some(v=>v.status==='current'));
+  const allBriefingGuests = currentBriefingGuests();
+  syncBriefingGuestSelect(allBriefingGuests);
+  const activeGuests = briefingGuestId === 'all' ? allBriefingGuests : allBriefingGuests.filter(g=>g.id===briefingGuestId);
   const voiceItems = [];
 
   activeGuests.forEach(guest=>{
@@ -1707,7 +1746,7 @@ function bringUpToSpeed(){
     guestBlock += `</div>`;
     lines.push(guestBlock);
 
-    if(next && voiceItems.length < 5){
+    if(next && voiceItems.length < (briefingGuestId === 'all' ? 5 : 3)){
       const action = cleanVoiceText(next.action || next.text);
       const memory = keyMemory ? cleanVoiceText(keyMemory.text) : '';
       voiceItems.push(`${guest.name}: ${next.time}, ${next.source}. ${action}${memory ? `. Watch for: ${memory}` : ''}`);
@@ -1732,31 +1771,76 @@ function bringUpToSpeed(){
     return `${guest.name}. ${cv.purpose}. ${memory} ${nextText}`;
   }).filter(Boolean).join('. Next guest: ');
   briefingVoiceText = voiceItems.length
-    ? `Quick handoff for ${currentStaff ? currentStaff.name : 'the team'}. ${voiceItems.join('. ')}.`
+    ? `Quick handoff for ${currentStaff ? currentStaff.name : 'the team'}. ${briefingGuestId === 'all' ? '' : 'Focused guest brief. '}${voiceItems.join('. ')}.`
     : briefingText;
 
   ld.style.display = 'none';
-  if(status) status.textContent = voiceItems.length ? `${voiceItems.length} priority items ready for voice.` : '';
+  if(status) status.textContent = voiceItems.length
+    ? `${voiceItems.length} priority ${voiceItems.length===1?'item':'items'} ready for voice.`
+    : '';
 }
 
 let briefingAudio = null;
+function setBriefingControls(state){
+  const speakBtn = document.getElementById('speed-speak-btn');
+  const pauseBtn = document.getElementById('speed-pause-btn');
+  if(!speakBtn || !pauseBtn) return;
+  if(state === 'generating'){
+    speakBtn.textContent = 'Generating…';
+    speakBtn.disabled = true;
+    pauseBtn.style.display = 'none';
+    return;
+  }
+  if(state === 'playing'){
+    speakBtn.textContent = 'Restart brief';
+    speakBtn.disabled = false;
+    pauseBtn.textContent = 'Pause';
+    pauseBtn.style.display = 'inline-flex';
+    return;
+  }
+  if(state === 'paused'){
+    speakBtn.textContent = 'Restart brief';
+    speakBtn.disabled = false;
+    pauseBtn.textContent = 'Resume';
+    pauseBtn.style.display = 'inline-flex';
+    return;
+  }
+  speakBtn.textContent = 'Quick voice brief';
+  speakBtn.disabled = false;
+  pauseBtn.style.display = 'none';
+}
+
 async function speakBriefing(){
   if(!briefingText){ bringUpToSpeed(); }
-  const btn = document.getElementById('speed-speak-btn');
   const status = document.getElementById('speed-status');
-  btn.textContent = 'Generating…'; btn.disabled = true;
+  setBriefingControls('generating');
   if(briefingAudio){ briefingAudio.pause(); briefingAudio=null; }
   try{
     if(status) status.textContent = 'Creating a short audio handoff…';
     const blob = await getVoiceBlob(briefingVoiceText || briefingText, status);
     const url=URL.createObjectURL(blob);
     briefingAudio=new Audio(url); briefingAudio.play();
-    btn.textContent='▶ Playing…';
-    briefingAudio.onended=()=>{ btn.textContent='Quick voice brief'; btn.disabled=false; if(status) status.textContent='Done.'; };
+    setBriefingControls('playing');
+    if(status) status.textContent='Playing…';
+    briefingAudio.onended=()=>{ setBriefingControls('idle'); if(status) status.textContent='Done.'; };
   }catch(e){
-    btn.textContent='Quick voice brief'; btn.disabled=false;
+    setBriefingControls('idle');
     if(status) status.textContent=e.message;
     if(/key|server|proxy|unreachable/i.test(e.message)) openSettings();
+  }
+}
+
+function toggleBriefingPause(){
+  const status = document.getElementById('speed-status');
+  if(!briefingAudio) return;
+  if(briefingAudio.paused){
+    briefingAudio.play();
+    setBriefingControls('playing');
+    if(status) status.textContent='Playing…';
+  } else {
+    briefingAudio.pause();
+    setBriefingControls('paused');
+    if(status) status.textContent='Paused.';
   }
 }
 
@@ -1787,11 +1871,12 @@ async function getVoiceBlob(text, statusEl){
       }
       if(res.status !== 404){
         const msg = await res.text().catch(()=>'');
-        if(!browserKey) throw new Error(msg || 'Add ElevenLabs key in Keys, or set ELEVENLABS_API_KEY on the server.');
+        throw new Error(msg || 'Voice proxy failed. Check ELEVENLABS_API_KEY or the key saved in Keys.');
       }
     }catch(e){
+      if(location.protocol !== 'file:') throw e;
       if(!browserKey) throw new Error('Voice server is not reachable. Start the local demo server, or add an ElevenLabs key in Keys and try again.');
-      if(statusEl) statusEl.textContent = 'Proxy unavailable, using browser key directly…';
+      if(statusEl) statusEl.textContent = 'No proxy in file mode, using browser key directly…';
     }
   }
 

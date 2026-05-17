@@ -18,9 +18,9 @@ async function handleVoiceover(request, env) {
   const body = await request.json().catch(() => ({}));
   const text = String(body.text || '').trim();
   const voiceId = String(body.voiceId || env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM').trim();
-  const key = String(env.ELEVENLABS_API_KEY || '').trim();
+  const key = String(request.headers.get('x-elevenlabs-key') || env.ELEVENLABS_API_KEY || '').trim();
 
-  if (!key) return textResponse('Missing ELEVENLABS_API_KEY in Cloudflare Variables and Secrets.', 400);
+  if (!key) return textResponse('Add an ElevenLabs key in Keys, or set ELEVENLABS_API_KEY in Cloudflare Variables and Secrets.', 400);
   if (!text) return textResponse('Missing voiceover text.', 400);
 
   const eleven = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
